@@ -664,38 +664,6 @@ select.form-input option{background:var(--navy);color:white;}
   .jobs-grid{grid-template-columns:1fr;}
 }
 
-/* Resume session banner */
-.resume-inner{
-  display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;
-  max-width:1100px;margin:0 auto;
-}
-.resume-icon{font-size:1.4rem;flex-shrink:0;}
-.resume-text{
-  flex:1;min-width:0;font-size:0.83rem;color:rgba(255,255,255,0.8);line-height:1.4;
-}
-.resume-text strong{color:white;}
-.resume-text em{color:var(--gold-light);font-style:normal;}
-.resume-actions{display:flex;gap:0.5rem;flex-shrink:0;}
-.btn-resume{
-  padding:0.45rem 1rem;background:var(--gold);border:none;
-  border-radius:var(--radius);color:white;font-size:0.8rem;font-weight:600;
-  cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.2s;
-}
-.btn-resume:hover{background:var(--gold-light);}
-.btn-resume-discard{
-  padding:0.45rem 0.9rem;background:transparent;
-  border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius);
-  color:rgba(255,255,255,0.55);font-size:0.8rem;font-weight:500;
-  cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.2s;
-}
-.btn-resume-discard:hover{color:white;border-color:rgba(255,255,255,0.5);}
-@media(max-width:520px){
-  .resume-inner{gap:0.6rem;}
-  .resume-text{font-size:0.76rem;}
-  .resume-actions{width:100%;}
-  .btn-resume,.btn-resume-discard{flex:1;text-align:center;}
-}
-
 /* ===== ANIMATIONS ===== */
 @keyframes fadeInUp{
   from{opacity:0;transform:translateY(20px);}
@@ -731,8 +699,6 @@ select.form-input option{background:var(--navy);color:white;}
 
 <!-- ======================== PAGE: INTRO ======================== -->
 <div id="page-intro" class="page active">
-  <!-- Resume session banner (shown only if saved session exists) -->
-  <div id="resume-banner" style="display:none;background:var(--navy);border-bottom:2px solid var(--gold);padding:0.9rem 1.5rem;position:sticky;top:0;z-index:200;"></div>
   <div style="background:var(--navy);min-height:100vh;">
     <div class="intro-hero">
       <div class="intro-grid">
@@ -1535,50 +1501,21 @@ let mAnswers = new Array(24).fill(null);
 let lAnswers = new Array(24).fill(null);
 let chartInstances = {};
 
-// Timer — uses absolute wall-clock timestamp so it stays accurate even when tab is closed
-const TIMER_TOTAL  = 600; // 10 minutes in seconds
-const SESSION_KEY  = 'disc_session_v1';
-let timerInterval  = null;
-let timedOut       = false;
-let testStartTimestamp = null; // Date.now() when test started
-
-// ============================================================
-// SESSION PERSISTENCE (localStorage)
-// ============================================================
-function saveSession() {
-  if (!testStartTimestamp) return;
-  try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({
-      participant, mAnswers, lAnswers, startTimestamp: testStartTimestamp
-    }));
-  } catch(e) {}
-}
-
-function clearSession() {
-  try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
-}
-
-function loadSession() {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
-}
-
-// Remaining seconds computed from wall-clock — survives tab close
-function getRemainingSeconds(startTs) {
-  return Math.max(0, TIMER_TOTAL - Math.floor((Date.now() - startTs) / 1000));
-}
+// Timer
+const TIMER_TOTAL = 600; // 10 minutes in seconds
+let timerSeconds = TIMER_TOTAL;
+let timerInterval = null;
+let timedOut = false;
 
 // ============================================================
 // INTRO
 // ============================================================
 function startTest() {
-  const name   = document.getElementById('inp-name').value.trim();
-  const age    = document.getElementById('inp-age').value.trim();
+  const name = document.getElementById('inp-name').value.trim();
+  const age = document.getElementById('inp-age').value.trim();
   const gender = document.getElementById('inp-gender').value;
-  const date   = document.getElementById('inp-date').value;
-  const err    = document.getElementById('intro-error');
+  const date = document.getElementById('inp-date').value;
+  const err = document.getElementById('intro-error');
 
   if (!name || !age || !gender || !date) {
     err.style.display = 'block';
@@ -1587,54 +1524,14 @@ function startTest() {
   }
   err.style.display = 'none';
 
-  // Brand-new session
-  participant        = { name, age, gender, date };
-  mAnswers           = new Array(24).fill(null);
-  lAnswers           = new Array(24).fill(null);
-  timedOut           = false;
-  testStartTimestamp = Date.now();
-  saveSession();
+  participant = { name, age, gender, date };
+  document.getElementById('test-participant-name').textContent = name + ' | ' + gender + ' | ' + age + ' tahun';
 
-  enterTestPage();
-}
-
-// Restore a saved session and continue
-function resumeSession(session) {
-  participant        = session.participant;
-  mAnswers           = session.mAnswers;
-  lAnswers           = session.lAnswers;
-  timedOut           = false;
-  testStartTimestamp = session.startTimestamp;
-  enterTestPage();
-}
-
-// Common setup shared by startTest() and resumeSession()
-function enterTestPage() {
-  document.getElementById('test-participant-name').textContent =
-    participant.name + ' | ' + participant.gender + ' | ' + participant.age + ' tahun';
+  timedOut = false;
   showPage('page-test');
   renderQuestions();
-  restoreRadioSelections();
   updateProgress();
   startTimer();
-}
-
-// Re-tick radio buttons that match saved mAnswers / lAnswers
-function restoreRadioSelections() {
-  for (let qi = 0; qi < 24; qi++) {
-    if (mAnswers[qi] !== null) {
-      const r = document.querySelector(`input[name="m_${qi}"][value="${mAnswers[qi]}"]`);
-      if (r) r.checked = true;
-      updateRowHighlights(qi);
-      checkConflict(qi);
-    }
-    if (lAnswers[qi] !== null) {
-      const r = document.querySelector(`input[name="l_${qi}"][value="${lAnswers[qi]}"]`);
-      if (r) r.checked = true;
-      updateRowHighlights(qi);
-      checkConflict(qi);
-    }
-  }
 }
 
 // ============================================================
@@ -1650,10 +1547,12 @@ function renderQuestions() {
 
     for (let col = 0; col < 3; col++) {
       const qi = row * 3 + col;
-      const q  = questions[qi];
+      const q = questions[qi];
+
       const block = document.createElement('div');
       block.className = 'q-block';
 
+      // Header: [M col] [L col] [Gambaran Diri] [No. badge]
       const header = document.createElement('div');
       header.className = 'q-header';
       header.innerHTML = `
@@ -1663,6 +1562,7 @@ function renderQuestions() {
         <span class="q-num">${qi+1}</span>`;
       block.appendChild(header);
 
+      // Option rows
       q.options.forEach((opt, oi) => {
         const row_el = document.createElement('div');
         row_el.className = 'option-row';
@@ -1674,11 +1574,12 @@ function renderQuestions() {
         block.appendChild(row_el);
       });
 
+      // Conflict warning
       const warn = document.createElement('div');
       warn.className = 'conflict-warning';
       warn.id = `warn-${qi}`;
       warn.style.display = 'none';
-      warn.innerHTML = '&#9888; M dan L tidak boleh sama!';
+      warn.innerHTML = '⚠ M dan L tidak boleh sama!';
       block.appendChild(warn);
 
       groupDiv.appendChild(block);
@@ -1689,28 +1590,38 @@ function renderQuestions() {
 
 function onMChange(qi, oi) {
   mAnswers[qi] = oi;
-  updateRowHighlights(qi); checkConflict(qi); updateProgress(); saveSession();
+  updateRowHighlights(qi);
+  checkConflict(qi);
+  updateProgress();
 }
+
 function onLChange(qi, oi) {
   lAnswers[qi] = oi;
-  updateRowHighlights(qi); checkConflict(qi); updateProgress(); saveSession();
+  updateRowHighlights(qi);
+  checkConflict(qi);
+  updateProgress();
 }
 
 function updateRowHighlights(qi) {
-  const m = mAnswers[qi], l = lAnswers[qi];
+  const m = mAnswers[qi];
+  const l = lAnswers[qi];
   for (let oi = 0; oi < 4; oi++) {
-    const el = document.getElementById(`row-${qi}-${oi}`);
-    if (!el) continue;
-    el.classList.remove('selected-m','selected-l');
-    if (oi === m) el.classList.add('selected-m');
-    if (oi === l) el.classList.add('selected-l');
+    const rowEl = document.getElementById(`row-${qi}-${oi}`);
+    if (!rowEl) continue;
+    rowEl.classList.remove('selected-m','selected-l');
+    if (oi === m) rowEl.classList.add('selected-m');
+    if (oi === l) rowEl.classList.add('selected-l');
   }
 }
 
 function checkConflict(qi) {
   const warn = document.getElementById(`warn-${qi}`);
   if (!warn) return;
-  warn.style.display = (mAnswers[qi] !== null && lAnswers[qi] !== null && mAnswers[qi] === lAnswers[qi]) ? 'block' : 'none';
+  if (mAnswers[qi] !== null && lAnswers[qi] !== null && mAnswers[qi] === lAnswers[qi]) {
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
 }
 
 function updateProgress() {
@@ -1718,141 +1629,282 @@ function updateProgress() {
   for (let i = 0; i < 24; i++) {
     if (mAnswers[i] !== null && lAnswers[i] !== null && mAnswers[i] !== lAnswers[i]) done++;
   }
-  document.getElementById('progress-fill').style.width = (done/24*100) + '%';
+  const pct = (done / 24) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-text').textContent = done + ' / 24 terjawab';
 }
 
 // ============================================================
-// TIMER (wall-clock based — survives tab close)
+// TIMER
 // ============================================================
 function startTimer() {
-  stopTimer();
-  tick();
-  timerInterval = setInterval(tick, 1000);
-}
-
-function tick() {
-  const rem = getRemainingSeconds(testStartTimestamp);
-  updateTimerDisplay(rem);
-  if (rem <= 0) { stopTimer(); triggerTimeup(); }
+  stopTimer(); // clear any previous
+  timerSeconds = TIMER_TOTAL;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      stopTimer();
+      triggerTimeup();
+    }
+  }, 1000);
 }
 
 function stopTimer() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
 }
 
-function updateTimerDisplay(rem) {
-  const mm  = String(Math.floor(rem / 60)).padStart(2,'0');
-  const ss  = String(rem % 60).padStart(2,'0');
-  const lbl = mm + ':' + ss;
-  document.getElementById('timer-display').textContent = lbl;
-  document.getElementById('timer-pill').textContent    = '\u23F1 ' + lbl;
+function updateTimerDisplay() {
+  const mins = Math.floor(timerSeconds / 60);
+  const secs = timerSeconds % 60;
+  const display = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  document.getElementById('timer-display').textContent = display;
+  document.getElementById('timer-pill').textContent = '⏱ ' + display;
 
+  // SVG ring: circumference of r=28 circle = 2π×28 ≈ 175.93
   const CIRC = 175.93;
-  document.getElementById('timer-ring').style.strokeDashoffset = CIRC * (1 - rem / TIMER_TOTAL);
+  const pct = timerSeconds / TIMER_TOTAL;
+  const offset = CIRC * (1 - pct);
+  document.getElementById('timer-ring').style.strokeDashoffset = offset;
 
+  // Colour states
   const wrap = document.getElementById('timer-wrap');
   wrap.classList.remove('warn','danger');
-  if      (rem <= 60)  wrap.classList.add('danger');
-  else if (rem <= 120) wrap.classList.add('warn');
+  if (timerSeconds <= 60) wrap.classList.add('danger');
+  else if (timerSeconds <= 120) wrap.classList.add('warn');
 }
 
 function triggerTimeup() {
   timedOut = true;
   document.getElementById('timeup-overlay').classList.add('show');
 }
+
 function confirmTimeup() {
   document.getElementById('timeup-overlay').classList.remove('show');
-  submitTestForced();
+  submitTestForced(); // auto-submit skipping invalid
 }
 
 // ============================================================
-// SUBMIT
+// SUBMIT TEST
 // ============================================================
 function submitTest() {
   const errors = [];
   for (let i = 0; i < 24; i++) {
-    if (mAnswers[i] === null || lAnswers[i] === null || mAnswers[i] === lAnswers[i]) errors.push(i+1);
+    if (mAnswers[i] === null || lAnswers[i] === null) {
+      errors.push(i + 1);
+    } else if (mAnswers[i] === lAnswers[i]) {
+      errors.push(i + 1);
+    }
   }
+
   const banner = document.getElementById('validation-banner');
   if (errors.length > 0) {
     banner.style.display = 'block';
-    banner.innerHTML = `&#9888; Harap lengkapi semua pertanyaan dengan benar. Soal yang belum/salah: <strong>${errors.join(', ')}</strong>. Pastikan M dan L tidak memilih pilihan yang sama.`;
-    window.scrollTo(0,0); return;
+    banner.innerHTML = `⚠ Harap lengkapi semua pertanyaan dengan benar. Soal yang belum/salah: <strong>${errors.join(', ')}</strong>. Pastikan M dan L tidak memilih pilihan yang sama.`;
+    window.scrollTo(0, 0);
+    return;
   }
   banner.style.display = 'none';
-  stopTimer(); clearSession();
+  stopTimer();
   calculateAndShowResults(false);
-  showPage('page-results'); window.scrollTo(0,0);
+  showPage('page-results');
+  window.scrollTo(0, 0);
 }
 
+// Auto-submit when time is up — skip invalid, count only valid answers
 function submitTestForced() {
-  stopTimer(); clearSession();
+  stopTimer();
   calculateAndShowResults(true);
-  showPage('page-results'); window.scrollTo(0,0);
+  showPage('page-results');
+  window.scrollTo(0, 0);
 }
 
 // ============================================================
 // CALCULATE SCORES
 // ============================================================
 function calculateAndShowResults(isForced) {
-  const M = {D:0,I:0,S:0,C:0}, L = {D:0,I:0,S:0,C:0};
+  const mostScores = {D:0,I:0,S:0,C:0};
+  const leastScores = {D:0,I:0,S:0,C:0};
+
   for (let qi = 0; qi < 24; qi++) {
-    const m = mAnswers[qi], l = lAnswers[qi];
+    const m = mAnswers[qi];
+    const l = lAnswers[qi];
+    // Skip invalid: null or M===L
     if (m === null || l === null || m === l) continue;
-    M[discKey[qi][m]]++; L[discKey[qi][l]]++;
+    mostScores[discKey[qi][m]]++;
+    leastScores[discKey[qi][l]]++;
   }
-  const ch = { D: M.D-L.D, I: M.I-L.I, S: M.S-L.S, C: M.C-L.C };
 
-  document.getElementById('timeup-notice').classList[isForced ? 'add' : 'remove']('show');
+  const mStar = 24 - (mostScores.D + mostScores.I + mostScores.S + mostScores.C);
+  const lStar = 24 - (leastScores.D + leastScores.I + leastScores.S + leastScores.C);
 
-  document.getElementById('r-name').textContent   = participant.name;
-  document.getElementById('r-age').textContent    = participant.age + ' tahun';
+  const changeScores = {
+    D: mostScores.D - leastScores.D,
+    I: mostScores.I - leastScores.I,
+    S: mostScores.S - leastScores.S,
+    C: mostScores.C - leastScores.C
+  };
+
+  // Fill score table
+  const notice = document.getElementById('timeup-notice');
+  if (isForced) notice.classList.add('show'); else notice.classList.remove('show');
+
+  document.getElementById('r-name').textContent = participant.name;
+  document.getElementById('r-age').textContent = participant.age + ' tahun';
   document.getElementById('r-gender').textContent = participant.gender;
-  document.getElementById('r-date').textContent   = formatDate(participant.date);
+  document.getElementById('r-date').textContent = formatDate(participant.date);
 
-  ['d','i','s','c'].forEach(k => {
-    document.getElementById('s-m-'+k).textContent = M[k.toUpperCase()];
-    document.getElementById('s-l-'+k).textContent = L[k.toUpperCase()];
-    document.getElementById('s-c-'+k).textContent = ch[k.toUpperCase()];
-  });
-  document.getElementById('s-m-star').textContent = Math.max(0, 24-(M.D+M.I+M.S+M.C));
-  document.getElementById('s-l-star').textContent = Math.max(0, 24-(L.D+L.I+L.S+L.C));
-  document.getElementById('s-m-tot').textContent  = 24;
-  document.getElementById('s-l-tot').textContent  = 24;
+  document.getElementById('s-m-d').textContent = mostScores.D;
+  document.getElementById('s-m-i').textContent = mostScores.I;
+  document.getElementById('s-m-s').textContent = mostScores.S;
+  document.getElementById('s-m-c').textContent = mostScores.C;
+  document.getElementById('s-m-star').textContent = Math.max(0,mStar);
+  document.getElementById('s-m-tot').textContent = 24;
 
-  const norm = r => Math.max(-8, Math.min(8, (r-6)*(4/3)));
-  renderChart('chart-most',   [norm(M.D),norm(M.I),norm(M.S),norm(M.C)], '#1a3260');
-  renderChart('chart-least',  [norm(L.D),norm(L.I),norm(L.S),norm(L.C)], '#b8952e');
-  renderChart('chart-change', [ch.D,ch.I,ch.S,ch.C],                     '#c0392b');
+  document.getElementById('s-l-d').textContent = leastScores.D;
+  document.getElementById('s-l-i').textContent = leastScores.I;
+  document.getElementById('s-l-s').textContent = leastScores.S;
+  document.getElementById('s-l-c').textContent = leastScores.C;
+  document.getElementById('s-l-star').textContent = Math.max(0,lStar);
+  document.getElementById('s-l-tot').textContent = 24;
 
-  const top = [{k:'D',v:M.D},{k:'I',v:M.I},{k:'S',v:M.S},{k:'C',v:M.C}].sort((a,b)=>b.v-a.v);
-  const prof = getProfile(top[0].k, top[1].k);
+  document.getElementById('s-c-d').textContent = changeScores.D;
+  document.getElementById('s-c-i').textContent = changeScores.I;
+  document.getElementById('s-c-s').textContent = changeScores.S;
+  document.getElementById('s-c-c').textContent = changeScores.C;
 
-  ['public','private','pressure'].forEach(t => {
-    document.getElementById('r-type-'+t).textContent = prof.name;
-  });
-  const tags = (id, arr) => { document.getElementById(id).innerHTML = arr.map(t=>`<span class="trait-tag">${t}</span>`).join(''); };
-  tags('r-traits-public',   prof.publicTraits);
-  tags('r-traits-private',  prof.privateTraits);
-  tags('r-traits-pressure', prof.pressureTraits);
+  // Charts
+  const normalize = (raw) => Math.max(-8, Math.min(8, (raw - 6) * (4/3)));
+  const mostNorm = [normalize(mostScores.D), normalize(mostScores.I), normalize(mostScores.S), normalize(mostScores.C)];
+  const leastNorm = [normalize(leastScores.D), normalize(leastScores.I), normalize(leastScores.S), normalize(leastScores.C)];
+  const changeArr = [changeScores.D, changeScores.I, changeScores.S, changeScores.C];
 
-  document.getElementById('r-desc-main').textContent   = prof.desc1;
-  document.getElementById('r-desc-detail').textContent = prof.desc2;
+  renderChart('chart-most', mostNorm, '#1a3260');
+  renderChart('chart-least', leastNorm, '#b8952e');
+  renderChart('chart-change', changeArr, '#c0392b');
 
-  const list = (id, arr) => { document.getElementById(id).innerHTML = arr.map(t=>`<li>${t}</li>`).join(''); };
-  list('r-positive-traits', prof.publicTraits);
-  list('r-negative-traits', prof.publicTraits.slice(-3).concat(prof.privateTraits.slice(-3)));
-  list('r-pressure-traits', prof.pressureTraits);
-  list('r-strengths',       prof.strengths);
-  list('r-challenges',      prof.challenges);
+  // Determine personality type
+  const mostArr = [
+    {key:'D',val:mostScores.D},
+    {key:'I',val:mostScores.I},
+    {key:'S',val:mostScores.S},
+    {key:'C',val:mostScores.C}
+  ].sort((a,b) => b.val - a.val);
 
-  document.getElementById('r-job-desc').textContent = prof.jobDesc;
-  document.getElementById('r-jobs-grid').innerHTML  = prof.jobs.map(c=>`
+  const leastArr = [
+    {key:'D',val:leastScores.D},
+    {key:'I',val:leastScores.I},
+    {key:'S',val:leastScores.S},
+    {key:'C',val:leastScores.C}
+  ].sort((a,b) => b.val - a.val);
+
+  const primary = mostArr[0].key;
+  const secondary = mostArr[1].key;
+
+  const profile = getProfile(primary, secondary);
+
+  // Render personality type cards
+  document.getElementById('r-type-public').textContent = profile.name;
+  document.getElementById('r-type-private').textContent = profile.name;
+  document.getElementById('r-type-pressure').textContent = profile.name;
+
+  const renderTags = (id, arr) => {
+    const el = document.getElementById(id);
+    el.innerHTML = arr.map(t => `<span class="trait-tag">${t}</span>`).join('');
+  };
+  renderTags('r-traits-public', profile.publicTraits);
+  renderTags('r-traits-private', profile.privateTraits);
+  renderTags('r-traits-pressure', profile.pressureTraits);
+
+  // Description
+  document.getElementById('r-desc-main').textContent = profile.desc1;
+  document.getElementById('r-desc-detail').textContent = profile.desc2;
+
+  // Trait lists
+  const renderList = (id, arr) => {
+    const el = document.getElementById(id);
+    el.innerHTML = arr.map(t => `<li>${t}</li>`).join('');
+  };
+  renderList('r-positive-traits', profile.publicTraits);
+  renderList('r-negative-traits', profile.publicTraits.slice(-3).concat(profile.privateTraits.slice(-3)));
+  renderList('r-pressure-traits', profile.pressureTraits);
+  renderList('r-strengths', profile.strengths);
+  renderList('r-challenges', profile.challenges);
+
+  // Job match
+  document.getElementById('r-job-desc').textContent = profile.jobDesc;
+  const jobsGrid = document.getElementById('r-jobs-grid');
+  jobsGrid.innerHTML = profile.jobs.map(cat => `
     <div class="job-category">
-      <div class="job-cat-title">${c.cat}</div>
-      <ul class="job-list-items">${c.items.map(j=>`<li>${j}</li>`).join('')}</ul>
-    </div>`).join('');
+      <div class="job-cat-title">${cat.cat}</div>
+      <ul class="job-list-items">
+        ${cat.items.map(j => `<li>${j}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderChart(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+  }
+  const colors = ['#c0392b','#e67e22','#27ae60','#2980b9'];
+  chartInstances[canvasId] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['D','I','S','C'],
+      datasets: [{
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        pointBackgroundColor: colors,
+        pointBorderColor: colors,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+        tension: 0.2,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` Skor: ${ctx.parsed.y.toFixed(1)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: -8, max: 8,
+          ticks: {
+            stepSize: 2,
+            font: { size: 10 },
+            color: '#666'
+          },
+          grid: { color: '#e8e8e8' }
+        },
+        x: {
+          ticks: {
+            font: { size: 12, weight: '700' },
+            color: (ctx) => ['#c0392b','#e67e22','#27ae60','#2980b9'][ctx.index]
+          },
+          grid: { color: '#e8e8e8' }
+        }
+      }
+    }
+  });
 }
 
 // ============================================================
@@ -1864,99 +1916,44 @@ function showPage(id) {
 }
 
 function restartTest() {
-  stopTimer(); clearSession();
-  timedOut = false; testStartTimestamp = null;
-  mAnswers = new Array(24).fill(null); lAnswers = new Array(24).fill(null); participant = {};
-  document.getElementById('inp-name').value   = '';
-  document.getElementById('inp-age').value    = '';
+  stopTimer();
+  timedOut = false;
+  timerSeconds = TIMER_TOTAL;
+  mAnswers = new Array(24).fill(null);
+  lAnswers = new Array(24).fill(null);
+  participant = {};
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-age').value = '';
   document.getElementById('inp-gender').value = '';
-  document.getElementById('inp-date').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('timeup-overlay').classList.remove('show');
-  updateTimerDisplay(TIMER_TOTAL);
+  // Reset timer display
+  document.getElementById('timer-display').textContent = '10:00';
+  document.getElementById('timer-pill').textContent = '⏱ 10:00';
+  document.getElementById('timer-ring').style.strokeDashoffset = 0;
   document.getElementById('timer-wrap').classList.remove('warn','danger');
-  const rb = document.getElementById('resume-banner');
-  if (rb) rb.style.display = 'none';
-  showPage('page-intro'); window.scrollTo(0,0);
+  showPage('page-intro');
+  window.scrollTo(0, 0);
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '\u2014';
+  if (!dateStr) return '—';
   const d = new Date(dateStr);
-  const mo = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  return d.getDate() + ' ' + mo[d.getMonth()] + ' ' + d.getFullYear();
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-// ============================================================
-// ON PAGE LOAD
-// ============================================================
+// Set default date
+document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+
+// Hide loading overlay
 window.addEventListener('load', () => {
-  // Hide loading overlay
   setTimeout(() => {
     const lo = document.getElementById('loading-overlay');
     lo.classList.add('hidden');
     setTimeout(() => lo.style.display = 'none', 600);
   }, 800);
-
-  // Default date
-  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
-
-  // Check for an unfinished session
-  const session = loadSession();
-  if (session && session.startTimestamp && session.participant) {
-    const rem = getRemainingSeconds(session.startTimestamp);
-    if (rem > 0) {
-      showResumeBanner(session, rem);
-    } else {
-      // Time already ran out while the tab was closed — restore & auto-submit
-      resumeSession(session);
-      triggerTimeup();
-    }
-  }
 });
-
-// Show the resume banner on the intro page
-function showResumeBanner(session, remaining) {
-  const mm = String(Math.floor(remaining/60)).padStart(2,'0');
-  const ss = String(remaining%60).padStart(2,'0');
-  let answered = 0;
-  session.mAnswers.forEach((m,i)=>{ if(m!==null && session.lAnswers[i]!==null && m!==session.lAnswers[i]) answered++; });
-
-  const banner = document.getElementById('resume-banner');
-  banner.innerHTML = `
-    <div class="resume-inner">
-      <div class="resume-icon">&#128190;</div>
-      <div class="resume-text">
-        <strong>Sesi tersimpan</strong> untuk <em>${session.participant.name}</em>
-        &mdash; ${answered}/24 terjawab, sisa waktu <strong>${mm}:${ss}</strong>
-      </div>
-      <div class="resume-actions">
-        <button class="btn-resume" onclick="continueSession()">Lanjutkan &#8594;</button>
-        <button class="btn-resume-discard" onclick="discardSession()">Mulai Baru</button>
-      </div>
-    </div>`;
-  banner.style.display = 'block';
-
-  // Pre-fill form with saved data
-  document.getElementById('inp-name').value   = session.participant.name;
-  document.getElementById('inp-age').value    = session.participant.age;
-  document.getElementById('inp-gender').value = session.participant.gender;
-  document.getElementById('inp-date').value   = session.participant.date;
-}
-
-function continueSession() {
-  const s = loadSession(); if (!s) return;
-  document.getElementById('resume-banner').style.display = 'none';
-  resumeSession(s);
-}
-
-function discardSession() {
-  clearSession();
-  document.getElementById('resume-banner').style.display = 'none';
-  document.getElementById('inp-name').value   = '';
-  document.getElementById('inp-age').value    = '';
-  document.getElementById('inp-gender').value = '';
-  document.getElementById('inp-date').value   = new Date().toISOString().split('T')[0];
-}
 </script>
 </body>
 </html>
