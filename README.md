@@ -1,17 +1,20 @@
 # DISC Test (HTML)
 
-Halaman tes DISC sederhana berbasis HTML yang bisa dijalankan langsung di browser.
+Halaman tes DISC sederhana berbasis HTML yang dapat dijalankan langsung di browser.
 
-## File Utama
+## Struktur File
 
-- `disc-test.html` - halaman tes DISC
+- `index.html` - halaman utama tes DISC
 
-## Cara Menjalankan
+## Menjalankan Project
 
-1. Buka file `disc-test.html` langsung di browser, atau
-2. Jalankan lewat local server (misalnya XAMPP) lalu akses folder project ini.
+1. Buka `index.html` langsung di browser.
+2. Atau jalankan melalui web server lokal (misalnya XAMPP) lalu akses folder project ini.
+
+## Repository
+
+- Repo GitHub: `https://github.com/jamilsalsabila/disc-html`
 
 ## Catatan
 
-- File sistem seperti `.DS_Store` sudah diabaikan melalui `.gitignore`.
-
+- File sistem seperti `.DS_Store` diabaikan lewat `.gitignore`.
