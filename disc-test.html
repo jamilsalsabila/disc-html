@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.I.S.C. Personality Assessment System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy: #0f1e38;
+  --navy-mid: #1a3260;
+  --navy-light: #2a4a8a;
+  --gold: #b8952e;
+  --gold-light: #d4af5a;
+  --gold-pale: #f5ecd0;
+  --cream: #faf8f3;
+  --white: #ffffff;
+  --text: #1a1a2e;
+  --text-light: #4a5568;
+  --border: #dde0e8;
+  --red: #c0392b;
+  --green: #1a6b3c;
+  --radius: 8px;
+  --shadow: 0 4px 24px rgba(15,30,56,0.10);
+  --shadow-lg: 0 8px 48px rgba(15,30,56,0.16);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);
+  color:var(--text);
+  min-height:100vh;
+}
+
+/* ===== LOADING ===== */
+#loading-overlay{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity 0.6s;
+}
+#loading-overlay.hidden{opacity:0;pointer-events:none;}
+.loader-inner{text-align:center;color:white;}
+.loader-inner .disc-logo{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:700;letter-spacing:8px;color:var(--gold-light);margin-bottom:1rem;}
+.loader-spin{width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:var(--gold-light);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== PAGES ===== */
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+
+/* ===== HEADER ===== */
+.site-header{
+  background:var(--navy);
+  padding:1rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 20px rgba(0,0,0,0.3);
+}
+.header-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;font-weight:700;
+  letter-spacing:6px;color:var(--gold-light);
+}
+.header-sub{font-size:0.7rem;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-top:2px;}
+.step-indicator{display:flex;gap:0.5rem;align-items:center;}
+.step-dot{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:600;color:rgba(255,255,255,0.5);
+  transition:all 0.3s;
+}
+.step-dot.active{background:var(--gold);border-color:var(--gold);color:white;}
+.step-dot.done{background:var(--navy-light);border-color:var(--navy-light);color:white;}
+.step-line{width:24px;height:2px;background:rgba(255,255,255,0.2);}
+
+/* ===== INTRO PAGE ===== */
+#page-intro{background:var(--navy);}
+.intro-hero{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  padding:4rem 2rem;
+}
+.intro-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 50%, rgba(26,50,96,0.8) 0%, transparent 70%),
+             radial-gradient(ellipse at 80% 20%, rgba(184,149,46,0.15) 0%, transparent 50%);
+}
+.intro-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;max-width:1100px;width:100%;
+  position:relative;z-index:1;align-items:center;
+}
+.intro-left{color:white;}
+.intro-badge{
+  display:inline-block;padding:0.4rem 1rem;
+  border:1px solid var(--gold);border-radius:50px;
+  font-size:0.7rem;letter-spacing:3px;color:var(--gold-light);
+  margin-bottom:1.5rem;text-transform:uppercase;
+}
+.intro-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:5rem;font-weight:700;line-height:1;
+  letter-spacing:12px;color:white;margin-bottom:1rem;
+}
+.intro-full{font-size:1rem;color:var(--gold-light);letter-spacing:4px;margin-bottom:2rem;font-weight:300;}
+.intro-desc{
+  font-size:0.95rem;line-height:1.8;
+  color:rgba(255,255,255,0.6);
+}
+.disc-pillars{
+  display:flex;gap:0.75rem;margin-top:1.8rem;
+}
+.pillar{
+  text-align:center;flex:1;
+}
+.pillar-letter{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;
+  margin:0 auto 0.4rem;
+}
+.pillar-letter.d{background:rgba(192,57,43,0.2);color:#e74c3c;border:1px solid rgba(192,57,43,0.4);}
+.pillar-letter.i{background:rgba(243,156,18,0.2);color:#f39c12;border:1px solid rgba(243,156,18,0.4);}
+.pillar-letter.s{background:rgba(39,174,96,0.2);color:#27ae60;border:1px solid rgba(39,174,96,0.4);}
+.pillar-letter.c{background:rgba(52,152,219,0.2);color:#3498db;border:1px solid rgba(52,152,219,0.4);}
+.pillar-name{font-size:0.6rem;color:rgba(255,255,255,0.5);letter-spacing:1px;}
+
+/* Identity Form Card */
+.form-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:2.5rem;
+  backdrop-filter:blur(10px);
+}
+.form-card-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;color:white;margin-bottom:0.5rem;
+}
+.form-card-sub{font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:2rem;}
+.form-group{margin-bottom:1.2rem;}
+.form-label{
+  display:block;font-size:0.75rem;font-weight:500;
+  color:rgba(255,255,255,0.5);letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:0.4rem;
+}
+.form-input{
+  width:100%;padding:0.75rem 1rem;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:var(--radius);color:white;font-size:0.95rem;
+  font-family:'DM Sans',sans-serif;transition:all 0.2s;
+}
+.form-input:focus{outline:none;border-color:var(--gold);background:rgba(255,255,255,0.1);}
+.form-input::placeholder{color:rgba(255,255,255,0.2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+select.form-input option{background:var(--navy);color:white;}
+
+.btn-start{
+  width:100%;margin-top:1rem;
+  padding:1rem;background:var(--gold);
+  border:none;border-radius:var(--radius);
+  color:white;font-size:1rem;font-weight:600;
+  cursor:pointer;letter-spacing:1px;
+  transition:all 0.3s;font-family:'DM Sans',sans-serif;
+}
+.btn-start:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(184,149,46,0.4);}
+
+/* ===== TEST PAGE ===== */
+#page-test{background:var(--cream);}
+.test-header{
+  background:var(--navy);padding:1.5rem 2rem;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.test-info{color:white;}
+.test-info h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;}
+.test-info p{font-size:0.8rem;color:rgba(255,255,255,0.5);}
+.progress-bar{
+  width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-top:0.5rem;
+}
+.progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 0.3s;}
+
+.instructions-bar{
+  background:linear-gradient(135deg,#faf3dc 0%,#f5ecd0 100%);
+  border-bottom:2px solid #e0c96e;
+  padding:0.7rem 1.2rem;
+}
+.inst-bar-inner{
+  display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;
+  max-width:1400px;margin:0 auto;
+}
+.inst-item{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-size:0.8rem;color:var(--text-light);font-weight:400;
+  padding:0.32rem 0.7rem;background:white;
+  border:1px solid #ddd;border-radius:50px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+  white-space:normal;word-break:keep-all;min-width:0;
+}
+.inst-item strong{color:var(--text);font-weight:600;flex-shrink:0;}
+.inst-warning{
+  display:inline-flex;align-items:center;gap:0.45rem;
+  font-size:0.76rem;color:#7a5c00;font-weight:500;
+  padding:0.32rem 0.7rem;background:#fff8e1;
+  border:1px solid #f0c040;border-radius:50px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+  white-space:normal;word-break:keep-all;min-width:0;
+}
+.badge-m,.badge-l{
+  width:22px;height:22px;border-radius:4px;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:800;
+}
+.badge-m{background:var(--navy);color:white;}
+.badge-l{background:#c0392b;color:white;}
+@media(max-width:600px){
+  .instructions-bar{padding:0.6rem 0.9rem;}
+  .inst-bar-inner{gap:0.45rem;}
+  .inst-item,.inst-warning{font-size:0.71rem;padding:0.28rem 0.55rem;}
+  .badge-m,.badge-l{width:20px;height:20px;font-size:0.65rem;}
+}
+
+/* Questions Table */
+.test-body{padding:1.2rem 1rem 2.5rem;}
+
+/* Question groups: 3 per row with gaps */
+.q-group{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+.q-block{
+  background:white;border-radius:10px;
+  box-shadow:0 2px 10px rgba(15,30,56,0.08);
+  border:1px solid var(--border);
+  overflow:hidden;
+}
+.q-block table{width:100%;border-collapse:collapse;}
+.q-block table tr{border-bottom:1px solid #f0f0f0;}
+.q-block table tr:last-child{border-bottom:none;}
+
+/* Header row inside each question block */
+.q-header{
+  background:var(--navy);
+  display:grid;
+  grid-template-columns:28px 28px 1fr auto;
+  align-items:center;
+  gap:0;
+  padding:0;
+  min-height:32px;
+}
+.q-col-head{
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:800;letter-spacing:0.5px;
+  height:32px;border-right:1px solid rgba(255,255,255,0.1);
+}
+.q-col-head.m{color:#a8c4ff;}
+.q-col-head.l{color:#ffaaaa;border-right:1px solid rgba(255,255,255,0.1);}
+.q-col-head.desc{
+  color:rgba(255,255,255,0.65);font-size:0.65rem;font-weight:500;
+  letter-spacing:0.3px;padding-left:6px;justify-content:flex-start;border-right:none;
+}
+.q-num{
+  background:var(--gold);color:white;
+  width:22px;height:22px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:700;flex-shrink:0;margin-right:6px;
+}
+
+/* Option rows - columns aligned with header */
+.option-row{
+  display:grid;
+  grid-template-columns:28px 28px 1fr;
+  align-items:center;
+  transition:background 0.1s;
+  border-bottom:1px solid #f0f0f0;
+  min-height:36px;
+}
+.option-row:last-child{border-bottom:none;}
+.option-row:hover{background:#f6f8fd;}
+.option-row.selected-m{background:#e8edf8;}
+.option-row.selected-l{background:#fce8e6;}
+
+/* Radio cells */
+.radio-cell{
+  display:flex;align-items:center;justify-content:center;
+  height:100%;border-right:1px solid #ebebf0;padding:4px 0;
+}
+.radio-cell.l-cell{border-right:1px solid #ebebf0;}
+.radio-cell input[type="radio"]{
+  -webkit-appearance:none;appearance:none;
+  width:16px;height:16px;
+  border:2px solid #bbb;border-radius:3px;
+  cursor:pointer;position:relative;
+  background:white;transition:all 0.15s;flex-shrink:0;
+}
+.radio-cell.m-cell input[type="radio"]:checked{background:var(--navy);border-color:var(--navy);}
+.radio-cell.l-cell input[type="radio"]:checked{background:#c0392b;border-color:#c0392b;}
+.radio-cell input[type="radio"]:checked::after{
+  content:'✕';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:9px;color:white;font-weight:900;line-height:1;
+}
+.option-text{
+  padding:6px 8px;font-size:0.77rem;
+  color:var(--text);line-height:1.35;
+}
+
+/* Conflict warning */
+.conflict-warning{
+  display:none;background:#fff8e1;border-top:1px solid #f0c040;
+  padding:5px 10px;font-size:0.7rem;color:#856404;
+  display:none;align-items:center;gap:5px;
+}
+
+/* Validation errors */
+.validation-banner{
+  display:none;background:#fee2e2;border:1px solid #fca5a5;
+  border-radius:var(--radius);padding:0.8rem 1.2rem;
+  margin:0 0 1rem;font-size:0.85rem;color:#991b1b;
+}
+
+@media(max-width:900px){
+  .q-group{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+}
+@media(max-width:560px){
+  .q-group{grid-template-columns:1fr;gap:8px;margin-bottom:8px;}
+  .test-body{padding:1rem 0.75rem 2rem;}
+}
+
+.btn-submit{
+  display:block;margin:1.5rem auto 0;
+  padding:0.9rem 3rem;background:var(--navy);
+  border:none;border-radius:var(--radius);
+  color:white;font-size:1rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;font-family:'DM Sans',sans-serif;
+  letter-spacing:0.5px;
+}
+.btn-submit:hover{background:var(--navy-light);transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+
+/* ===== RESULTS PAGE ===== */
+#page-results{background:#f4f5f8;}
+.results-header{
+  background:var(--navy);
+  padding:1.8rem 2.5rem 1.2rem;color:white;
+}
+.results-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;}
+.results-header h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem;font-weight:600;line-height:1.1;
+}
+.results-header .participant-info{
+  font-size:0.8rem;color:rgba(255,255,255,0.55);margin-top:0.35rem;
+  display:flex;flex-wrap:wrap;gap:0.25rem 0.6rem;
+}
+.results-header .participant-info .info-item{
+  display:flex;gap:0.3rem;align-items:center;
+}
+.results-header .participant-info .info-label{color:rgba(255,255,255,0.4);}
+.results-header .participant-info .info-val{color:var(--gold-light);font-weight:500;}
+
+/* Action buttons bar */
+.results-actions{
+  display:flex;gap:0.6rem;align-items:center;flex-shrink:0;margin-top:0.2rem;
+}
+.btn-print,.btn-restart{
+  display:inline-flex;align-items:center;gap:0.45rem;
+  padding:0.6rem 1.3rem;border-radius:var(--radius);
+  font-size:0.82rem;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.2s;border:none;
+  white-space:nowrap;
+}
+.btn-print{
+  background:var(--gold);color:white;
+  box-shadow:0 2px 10px rgba(184,149,46,0.35);
+}
+.btn-restart{
+  background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);
+  border:1.5px solid rgba(255,255,255,0.25);
+}
+.btn-print:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 4px 16px rgba(184,149,46,0.45);}
+.btn-restart:hover{background:rgba(255,255,255,0.18);color:white;}
+@media(max-width:700px){
+  .results-header{padding:1.2rem 1rem 1rem;}
+  .results-header-top{flex-direction:column;gap:1rem;}
+  .results-header h1{font-size:1.5rem;}
+  .results-actions{width:100%;justify-content:stretch;}
+  .btn-print,.btn-restart{flex:1;justify-content:center;padding:0.65rem 0;}
+}
+
+.results-body{max-width:1200px;margin:0 auto;padding:2rem 1.5rem;}
+
+/* Score Table */
+.score-card{
+  background:white;border-radius:12px;
+  box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.5rem;
+  overflow:hidden;
+}
+.score-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -0.25rem;}
+.score-table{width:100%;border-collapse:separate;border-spacing:0;font-size:0.88rem;min-width:480px;}
+.score-table thead tr th{
+  background:var(--navy);color:white;
+  padding:0.75rem 1rem;text-align:center;font-weight:600;font-size:0.8rem;
+  letter-spacing:0.5px;
+}
+.score-table thead tr th:first-child{text-align:left;border-radius:8px 0 0 0;}
+.score-table thead tr th:last-child{border-radius:0 8px 0 0;}
+.score-table thead .th-d{background:#c0392b;}
+.score-table thead .th-i{background:#d4800a;}
+.score-table thead .th-s{background:#1a6b3c;}
+.score-table thead .th-c{background:#1a4a8a;}
+.score-table tbody tr{transition:background 0.1s;}
+.score-table tbody tr:hover{background:#f8faff;}
+.score-table tbody td{
+  padding:0.75rem 1rem;text-align:center;
+  border-bottom:1px solid var(--border);font-size:0.85rem;
+}
+.score-table tbody tr:last-child td{border-bottom:none;}
+.score-table .line-label{font-weight:600;text-align:left;color:var(--text);font-size:0.83rem;}
+.score-table .line-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;background:var(--navy);color:white;
+  border-radius:50%;font-size:0.65rem;font-weight:700;margin-right:6px;flex-shrink:0;
+}
+.score-table tbody .val-d{color:#c0392b;font-weight:700;font-size:1rem;}
+.score-table tbody .val-i{color:#d4800a;font-weight:700;font-size:1rem;}
+.score-table tbody .val-s{color:#1a6b3c;font-weight:700;font-size:1rem;}
+.score-table tbody .val-c{color:#1a4a8a;font-weight:700;font-size:1rem;}
+.score-table tbody .val-tot{
+  font-weight:700;font-size:0.9rem;background:var(--navy);color:white;
+  border-radius:50px;padding:0.2rem 0.7rem;display:inline-block;
+}
+.score-table tbody tr:nth-child(1){background:#fff8f8;}
+.score-table tbody tr:nth-child(2){background:#f8fbff;}
+.score-table tbody tr:nth-child(3){background:#fffdf0;}
+
+/* Shared card title */
+.card-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.3rem;font-weight:600;color:var(--navy);
+  margin-bottom:1rem;padding-bottom:0.5rem;
+  border-bottom:2px solid var(--gold-pale);
+}
+.disc-d{color:#c0392b;font-weight:700;}
+.disc-i{color:#d4800a;font-weight:700;}
+.disc-s{color:#1a6b3c;font-weight:700;}
+.disc-c{color:#1a4a8a;font-weight:700;}
+.psychogram-card{
+  background:white;border-radius:12px;
+  box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.5rem;
+}
+.graphs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-top:1rem;}
+.graph-block{text-align:center;}
+.graph-title{
+  font-size:0.78rem;font-weight:600;color:var(--navy);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;
+}
+.graph-subtitle{font-size:0.7rem;color:var(--text-light);margin-bottom:0.8rem;font-style:italic;}
+.graph-canvas-wrap{
+  position:relative;height:220px;
+  border:1px solid var(--border);border-radius:8px;padding:0.5rem;
+  background:#fafbff;
+}
+
+/* Personality Type Cards */
+.type-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.type-card{
+  background:white;border-radius:12px;
+  box-shadow:var(--shadow);padding:1.2rem;
+  border-top:4px solid var(--navy);
+}
+.type-card.public{border-top-color:var(--navy);}
+.type-card.private{border-top-color:var(--gold);}
+.type-card.pressure{border-top-color:#c0392b;}
+.type-label{font-size:0.68rem;font-weight:600;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:0.5rem;}
+.type-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--navy);}
+.type-traits{margin-top:0.8rem;}
+.trait-tag{
+  display:inline-block;padding:0.2rem 0.6rem;
+  background:var(--cream);border:1px solid var(--border);
+  border-radius:50px;font-size:0.68rem;color:var(--text-light);
+  margin:0.15rem;
+}
+
+/* Description */
+.desc-card{
+  background:white;border-radius:12px;
+  box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.5rem;
+}
+.desc-text{line-height:1.8;font-size:0.9rem;color:var(--text);margin-bottom:1rem;}
+.desc-highlight{
+  background:linear-gradient(135deg,#f0f4ff,#e8f4fd);
+  border-left:4px solid var(--navy-light);
+  padding:1rem 1.2rem;border-radius:0 8px 8px 0;
+  font-size:0.88rem;line-height:1.7;color:var(--text);
+  margin-bottom:1rem;
+}
+
+/* Traits sections */
+.traits-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.traits-card{
+  background:white;border-radius:12px;
+  box-shadow:var(--shadow);padding:1.2rem;
+}
+.traits-card .card-title{font-size:1.1rem;}
+.trait-list{list-style:none;}
+.trait-list li{
+  padding:0.45rem 0;border-bottom:1px solid #f0f0f0;
+  font-size:0.83rem;color:var(--text);display:flex;align-items:center;gap:0.5rem;
+}
+.trait-list li:last-child{border-bottom:none;}
+.trait-list li::before{content:'•';color:var(--gold);font-size:1.2rem;flex-shrink:0;}
+
+/* Strengths / Challenges */
+.str-chal-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.strengths-card{border-left:4px solid #1a6b3c;}
+.challenges-card{border-left:4px solid #c0392b;}
+.str-list li::before{color:#1a6b3c;}
+.chal-list li::before{color:#c0392b;}
+
+/* Job Match */
+.jobs-card{
+  background:var(--navy);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:1.5rem;margin-bottom:1.5rem;
+}
+.jobs-card .card-title{color:var(--gold-light);}
+.jobs-desc{font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:1.2rem;line-height:1.6;}
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.8rem;}
+.job-category{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;padding:1rem;
+}
+.job-cat-title{
+  font-size:0.72rem;font-weight:600;color:var(--gold-light);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:0.6rem;
+}
+.job-list-items{list-style:none;}
+.job-list-items li{
+  font-size:0.8rem;color:rgba(255,255,255,0.75);
+  padding:0.25rem 0;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:0.4rem;
+}
+.job-list-items li:last-child{border-bottom:none;}
+.job-list-items li::before{content:'→';color:var(--gold);font-size:0.8rem;flex-shrink:0;}
+
+/* ===== PRINT STYLES ===== */
+@media print{
+  .site-header,.btn-print,.btn-restart,.btn-submit,.step-indicator{display:none!important;}
+  body{background:white;}
+  .score-card,.psychogram-card,.type-card,.desc-card,.traits-card,.jobs-card{box-shadow:none;border:1px solid #ddd;}
+  .jobs-card{background:#1a2b4a;-webkit-print-color-adjust:exact;}
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .intro-grid{grid-template-columns:1fr;gap:2rem;}
+  .graphs-row,.type-row,.traits-grid,.str-chal-row{grid-template-columns:1fr;}
+  .jobs-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .intro-title{font-size:3.5rem;}
+  .disc-pillars{flex-wrap:wrap;}
+  .jobs-grid{grid-template-columns:1fr;}
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.fade-in{animation:fadeInUp 0.5s ease forwards;}
+.fade-in-delay-1{animation-delay:0.1s;opacity:0;}
+.fade-in-delay-2{animation-delay:0.2s;opacity:0;}
+.fade-in-delay-3{animation-delay:0.3s;opacity:0;}
+
+.answered-badge{
+  display:inline-block;padding:2px 8px;background:#e8faf0;
+  border:1px solid #a7d7b8;border-radius:50px;
+  font-size:0.65rem;color:#1a6b3c;font-weight:600;margin-left:auto;
+}
+.unanswered-badge{
+  display:inline-block;padding:2px 8px;background:#fee2e2;
+  border:1px solid #fca5a5;border-radius:50px;
+  font-size:0.65rem;color:#991b1b;font-weight:600;margin-left:auto;
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-overlay">
+  <div class="loader-inner">
+    <div class="disc-logo">D·I·S·C</div>
+    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;letter-spacing:2px;margin-bottom:1.5rem;">PERSONALITY ASSESSMENT SYSTEM</p>
+    <div class="loader-spin"></div>
+  </div>
+</div>
+
+<!-- ======================== PAGE: INTRO ======================== -->
+<div id="page-intro" class="page active">
+  <div style="background:var(--navy);min-height:100vh;">
+    <div class="intro-hero">
+      <div class="intro-grid">
+        <div class="intro-left fade-in">
+          <div class="intro-badge">Personality Assessment</div>
+          <div class="intro-title">D.I.S.C</div>
+          <div class="intro-full">DOMINANCE · INFLUENCE · STEADINESS · COMPLIANCE</div>
+          <p class="intro-desc">Instrumen penilaian kepribadian berbasis perilaku yang membantu memahami pola komunikasi, motivasi, dan gaya kerja seseorang secara mendalam.</p>
+          <div class="disc-pillars">
+            <div class="pillar">
+              <div class="pillar-letter d">D</div>
+              <div class="pillar-name">Dominance</div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-letter i">I</div>
+              <div class="pillar-name">Influence</div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-letter s">S</div>
+              <div class="pillar-name">Steadiness</div>
+            </div>
+            <div class="pillar">
+              <div class="pillar-letter c">C</div>
+              <div class="pillar-name">Compliance</div>
+            </div>
+          </div>
+        </div>
+        <div class="fade-in fade-in-delay-2">
+          <div class="form-card">
+            <div class="form-card-title">Data Peserta</div>
+            <p class="form-card-sub">Lengkapi data diri sebelum memulai tes</p>
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap</label>
+              <input type="text" id="inp-name" class="form-input" placeholder="Masukkan nama lengkap Anda">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Usia</label>
+                <input type="number" id="inp-age" class="form-input" placeholder="Usia" min="10" max="99">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Jenis Kelamin</label>
+                <select id="inp-gender" class="form-input">
+                  <option value="">Pilih...</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tanggal Tes</label>
+              <input type="date" id="inp-date" class="form-input">
+            </div>
+            <div id="intro-error" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:0.7rem 1rem;font-size:0.82rem;color:#991b1b;margin-bottom:1rem;"></div>
+            <button class="btn-start" onclick="startTest()">Mulai Tes →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== PAGE: TEST ======================== -->
+<div id="page-test" class="page">
+  <div class="test-header">
+    <div class="test-info">
+      <h2>D.I.S.C. Assessment Test</h2>
+      <p id="test-participant-name">—</p>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div style="text-align:right;color:white;">
+      <div style="font-size:1.8rem;font-weight:700;font-family:'Cormorant Garamond',serif;" id="progress-text">0/24</div>
+      <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);">pertanyaan terjawab</div>
+    </div>
+  </div>
+  <div class="instructions-bar">
+    <div class="inst-bar-inner">
+      <div class="inst-item"><span class="badge-m">M</span> <strong>Most</strong> – Paling menggambarkan diri Anda</div>
+      <div class="inst-item"><span class="badge-l">L</span> <strong>Least</strong> – Paling tidak menggambarkan diri Anda</div>
+      <div class="inst-warning">⚠ Pilih tepat 1 M dan 1 L per nomor &mdash; keduanya tidak boleh sama</div>
+    </div>
+  </div>
+  <div class="test-body">
+    <div id="validation-banner" class="validation-banner"></div>
+    <div id="questions-container"></div>
+    <button class="btn-submit" onclick="submitTest()">Lihat Hasil →</button>
+  </div>
+</div>
+
+<!-- ======================== PAGE: RESULTS ======================== -->
+<div id="page-results" class="page">
+  <div class="results-header">
+    <div class="results-header-top">
+      <div>
+        <h1>D.I.S.C. Personality Report</h1>
+        <div class="participant-info">
+          <div class="info-item"><span class="info-label">Nama:</span><span class="info-val" id="r-name">—</span></div>
+          <div class="info-item"><span class="info-label">Usia:</span><span class="info-val" id="r-age">—</span></div>
+          <div class="info-item"><span class="info-label">Kelamin:</span><span class="info-val" id="r-gender">—</span></div>
+          <div class="info-item"><span class="info-label">Tanggal:</span><span class="info-val" id="r-date">—</span></div>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="btn-restart" onclick="restartTest()">↺ Ulangi Tes</button>
+        <button class="btn-print" onclick="window.print()">⎙ Cetak / PDF</button>
+      </div>
+    </div>
+  </div>
+  <div class="results-body">
+    <!-- Score Table -->
+    <div class="score-card fade-in">
+      <div class="card-title">Tabel Skor DISC</div>
+      <div class="score-table-wrap">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;background:var(--navy);">Line</th>
+              <th class="th-d">D</th>
+              <th class="th-i">I</th>
+              <th class="th-s">S</th>
+              <th class="th-c">C</th>
+              <th style="background:var(--navy);">*</th>
+              <th style="background:var(--navy);">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="line-label"><span class="line-num">1</span>MOST – Topeng Publik</td>
+              <td class="val-d" id="s-m-d">—</td>
+              <td class="val-i" id="s-m-i">—</td>
+              <td class="val-s" id="s-m-s">—</td>
+              <td class="val-c" id="s-m-c">—</td>
+              <td id="s-m-star">—</td>
+              <td><span class="val-tot" id="s-m-tot">—</span></td>
+            </tr>
+            <tr>
+              <td class="line-label"><span class="line-num">2</span>LEAST – Diri Inti Privat</td>
+              <td class="val-d" id="s-l-d">—</td>
+              <td class="val-i" id="s-l-i">—</td>
+              <td class="val-s" id="s-l-s">—</td>
+              <td class="val-c" id="s-l-c">—</td>
+              <td id="s-l-star">—</td>
+              <td><span class="val-tot" id="s-l-tot">—</span></td>
+            </tr>
+            <tr>
+              <td class="line-label"><span class="line-num">3</span>CHANGE – Diri Cermin</td>
+              <td class="val-d" id="s-c-d">—</td>
+              <td class="val-i" id="s-c-i">—</td>
+              <td class="val-s" id="s-c-s">—</td>
+              <td class="val-c" id="s-c-c">—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Psychogram -->
+    <div class="psychogram-card fade-in fade-in-delay-1">
+      <div class="card-title">Psikogram – DISC Personality Graph</div>
+      <div class="graphs-row">
+        <div class="graph-block">
+          <div class="graph-title">Graph 1 – MOST</div>
+          <div class="graph-subtitle">Mask · Public Self</div>
+          <div class="graph-canvas-wrap"><canvas id="chart-most"></canvas></div>
+        </div>
+        <div class="graph-block">
+          <div class="graph-title">Graph 2 – LEAST</div>
+          <div class="graph-subtitle">Core · Private Self</div>
+          <div class="graph-canvas-wrap"><canvas id="chart-least"></canvas></div>
+        </div>
+        <div class="graph-block">
+          <div class="graph-title">Graph 3 – CHANGE</div>
+          <div class="graph-subtitle">Mirror · Perceived Self</div>
+          <div class="graph-canvas-wrap"><canvas id="chart-change"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personality Types -->
+    <div class="type-row">
+      <div class="type-card public">
+        <div class="type-label">Kepribadian di Muka Umum</div>
+        <div class="type-name" id="r-type-public">—</div>
+        <div class="type-traits" id="r-traits-public"></div>
+      </div>
+      <div class="type-card private">
+        <div class="type-label">Kepribadian Asli (Tersembunyi)</div>
+        <div class="type-name" id="r-type-private">—</div>
+        <div class="type-traits" id="r-traits-private"></div>
+      </div>
+      <div class="type-card pressure">
+        <div class="type-label">Kepribadian Saat Tekanan</div>
+        <div class="type-name" id="r-type-pressure">—</div>
+        <div class="type-traits" id="r-traits-pressure"></div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="desc-card fade-in">
+      <div class="card-title">Deskripsi Kepribadian</div>
+      <div class="desc-highlight" id="r-desc-main"></div>
+      <div class="desc-text" id="r-desc-detail"></div>
+    </div>
+
+    <!-- Traits -->
+    <div class="traits-grid">
+      <div class="traits-card">
+        <div class="card-title">Karakter Positif</div>
+        <ul class="trait-list" id="r-positive-traits"></ul>
+      </div>
+      <div class="traits-card">
+        <div class="card-title">Potensi Hambatan</div>
+        <ul class="trait-list" id="r-negative-traits"></ul>
+      </div>
+      <div class="traits-card">
+        <div class="card-title">Di Bawah Tekanan</div>
+        <ul class="trait-list" id="r-pressure-traits"></ul>
+      </div>
+    </div>
+
+    <!-- Strengths & Challenges -->
+    <div class="str-chal-row">
+      <div class="traits-card strengths-card">
+        <div class="card-title">Kekuatan Utama</div>
+        <ul class="trait-list str-list" id="r-strengths"></ul>
+      </div>
+      <div class="traits-card challenges-card">
+        <div class="card-title">Area Pengembangan</div>
+        <ul class="trait-list chal-list" id="r-challenges"></ul>
+      </div>
+    </div>
+
+    <!-- Job Match -->
+    <div class="jobs-card">
+      <div class="card-title">Job Match – Rekomendasi Karier</div>
+      <div class="jobs-desc" id="r-job-desc"></div>
+      <div class="jobs-grid" id="r-jobs-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: DISC QUESTIONS
+// ============================================================
+const questions = [
+  {
+    options:[
+      'Mudah bergaul, ramah, mudah setuju',
+      'Mempercayai, percaya pada orang lain',
+      'Petualangan, suka mengambil risiko',
+      'Penuh toleransi, menghormati orang lain'
+    ]
+  },
+  {
+    options:[
+      'Lembut suara, pendiam, tertutup',
+      'Optimistik, visioner (pandangan ke masa depan)',
+      'Pusat perhatian, suka bersosialisasi',
+      'Pendamai, membawa ketenangan'
+    ]
+  },
+  {
+    options:[
+      'Menyemangati orang lain',
+      'Berusaha mencapai kesempurnaan',
+      'Menjadi bagian dari tim/kelompok',
+      'Ingin menetapkan goal/tujuan'
+    ]
+  },
+  {
+    options:[
+      'Menjadi frustrasi',
+      'Memendam perasaan dalam hati',
+      'Menyampaikan sudut pandang pribadi',
+      'Berani beroposisi'
+    ]
+  },
+  {
+    options:[
+      'Hidup/lincah, banyak bicara',
+      'Cepat, penuh keyakinan',
+      'Berusaha menjaga keseimbangan',
+      'Berusaha patuh pada peraturan'
+    ]
+  },
+  {
+    options:[
+      'Mengelola waktu dengan efisien',
+      'Sering terburu-buru, merasa ditekan',
+      'Hal-hal sosial adalah penting',
+      'Suka menyelesaikan hal yang sudah dimulai'
+    ]
+  },
+  {
+    options:[
+      'Menolak perubahan yang mendadak',
+      'Cenderung terlalu banyak berjanji',
+      'Mundur apabila berada di bawah tekanan',
+      'Tidak takut untuk berkelahi'
+    ]
+  },
+  {
+    options:[
+      'Penyemangat/pendukung yang baik',
+      'Pendengar yang baik',
+      'Penganalisa yang baik',
+      'Pendelegasian yang baik/pandai membagi tugas'
+    ]
+  },
+  {
+    options:[
+      'Yang penting adalah hasil',
+      'Kerjakan dengan benar, ketepatan penting',
+      'Buat agar menyenangkan',
+      'Kerjakan bersama-sama'
+    ]
+  },
+  {
+    options:[
+      'Akan berjalan terus tanpa kontrol diri',
+      'Membeli karena dorongan hasrat/impulsif',
+      'Akan menunggu, tanpa tekanan',
+      'Akan membeli apa yang diinginkan'
+    ]
+  },
+  {
+    options:[
+      'Bersahabat, mudah bergaul',
+      'Unik, bosan pada rutinitas',
+      'Aktif melakukan perubahan',
+      'Ingin segala sesuatu akurat dan pasti'
+    ]
+  },
+  {
+    options:[
+      'Mengalah, tidak suka bertentangan',
+      'Penuh dengan hal-hal kecil/detail',
+      'Berubah pada menit-menit akhir',
+      'Mendesak/memaksa agak kasar'
+    ]
+  },
+  {
+    options:[
+      'Ingin kemajuan/peningkatan',
+      'Puas dengan keadaan tenang/mudah puas',
+      'Menunjukkan perasaan dengan terbuka',
+      'Rendah hati, sederhana'
+    ]
+  },
+  {
+    options:[
+      'Tenang, pendiam, tertutup',
+      'Gembira, bebas, riang',
+      'Menyenangkan, baik hati',
+      'Tak gentar, berani'
+    ]
+  },
+  {
+    options:[
+      'Menyediakan waktu untuk orang lain',
+      'Merencanakan masa depan, bersiap-siap',
+      'Bepergian demi petualangan baru',
+      'Menerima penghargaan atas pencapaian target'
+    ]
+  },
+  {
+    options:[
+      'Peraturan perlu dipertanyakan',
+      'Peraturan membuat menjadi adil',
+      'Peraturan membuat menjadi membosankan',
+      'Peraturan membuat menjadi aman'
+    ]
+  },
+  {
+    options:[
+      'Pendidikan, kebudayaan',
+      'Prestasi, penghargaan',
+      'Keselamatan, keamanan',
+      'Sosial, pertemuan kelompok'
+    ]
+  },
+  {
+    options:[
+      'Memimpin, pendekatan langsung',
+      'Suka bergaul, antusias',
+      'Mudah ditebak, konsisten',
+      'Waspada, berhati-hati'
+    ]
+  },
+  {
+    options:[
+      'Sulit dikalahkan/ditundukkan',
+      'Melaksanakan sesuai perintah, ikut pimpinan',
+      'Bersemangat, riang',
+      'Ingin keteraturan, rapi'
+    ]
+  },
+  {
+    options:[
+      'Saya akan pimpin mereka',
+      'Saya akan ikut/mengikuti',
+      'Saya akan pengaruhi/bujuk mereka',
+      'Saya akan mendapatkan fakta-faktanya'
+    ]
+  },
+  {
+    options:[
+      'Memikirkan orang lain dahulu',
+      'Suka bersaing/kompetitif, suka tantangan',
+      'Optimis, berpikir positif',
+      'Sistematis, berpikir logis'
+    ]
+  },
+  {
+    options:[
+      'Menyenangkan orang lain, ramah, penurut',
+      'Tertawa lepas, hidup',
+      'Pemberani, tegas',
+      'Pendiam, tertutup, tenang'
+    ]
+  },
+  {
+    options:[
+      'Ingin wewenang/kekuasaan lebih',
+      'Ingin kesempatan baru',
+      'Menghindari perselisihan/konflik apapun',
+      'Ingin arahan yang jelas'
+    ]
+  },
+  {
+    options:[
+      'Dapat dipercaya dan diandalkan',
+      'Kreatif, unik',
+      'Berorientasi pada hasil/profit/untung',
+      'Memegang teguh standar yang tinggi, akurat'
+    ]
+  }
+];
+
+// DISC KEY: each question's options mapped to D/I/S/C
+// Order: [option1, option2, option3, option4]
+const discKey = [
+  ['I','S','D','C'], // Q1: bergaul=I, percaya=S, petualangan=D, toleransi=C
+  ['C','I','D','S'], // Q2: pendiam=C, optimistik=I, pusat perhatian=D, pendamai=S
+  ['I','C','S','D'], // Q3: menyemangati=I, kesempurnaan=C, tim=S, goal=D
+  ['I','S','C','D'], // Q4: frustrasi=I, memendam=S, sudut pandang=C, oposisi=D
+  ['I','D','S','C'], // Q5: lincah=I, cepat=D, keseimbangan=S, patuh=C
+  ['C','D','I','S'], // Q6: efisien=C, terburu=D, sosial=I, menyelesaikan=S
+  ['C','I','S','D'], // Q7: tolak perubahan=C, banyak janji=I, mundur=S, berkelahi=D
+  ['I','S','C','D'], // Q8: penyemangat=I, pendengar=S, penganalisa=C, pendelegasi=D
+  ['D','C','I','S'], // Q9: hasil=D, ketepatan=C, menyenangkan=I, bersama=S
+  ['D','I','S','C'], // Q10: berjalan terus=D, impulsif=I, menunggu=S, beli sendiri=C
+  ['S','I','D','C'], // Q11: bersahabat=S, unik=I, perubahan=D, akurat=C
+  ['S','C','I','D'], // Q12: mengalah=S, detail=C, berubah akhir=I, memaksa=D
+  ['D','S','I','C'], // Q13: kemajuan=D, puas tenang=S, tunjukkan perasaan=I, rendah hati=C
+  ['C','I','S','D'], // Q14: pendiam=C, gembira=I, menyenangkan=S, berani=D
+  ['S','C','I','D'], // Q15: waktu untuk orang=S, merencanakan=C, petualangan=I, penghargaan=D
+  ['D','C','I','S'], // Q16: pertanyakan=D, adil=C, membosankan=I, aman=S
+  ['C','D','S','I'], // Q17: pendidikan=C, prestasi=D, keselamatan=S, sosial=I
+  ['D','I','S','C'], // Q18: memimpin=D, bergaul=I, konsisten=S, waspada=C
+  ['D','S','I','C'], // Q19: sulit dikalahkan=D, ikut pimpinan=S, bersemangat=I, keteraturan=C
+  ['D','S','I','C'], // Q20: pimpin=D, ikut=S, pengaruhi=I, fakta=C
+  ['S','D','I','C'], // Q21: orang lain dulu=S, kompetitif=D, optimis=I, logis=C
+  ['S','I','D','C'], // Q22: menyenangkan=S, tertawa=I, pemberani=D, pendiam=C
+  ['D','I','S','C'], // Q23: wewenang=D, kesempatan=I, hindari konflik=S, arahan jelas=C
+  ['S','I','D','C']  // Q24: diandalkan=S, kreatif=I, hasil=D, standar tinggi=C
+];
+
+// ============================================================
+// PERSONALITY PROFILES DATABASE
+// ============================================================
+const profiles = {
+
+  'D': {
+    name: 'DRIVER – PENGGERAK',
+    desc1: 'Individu yang sangat berorientasi pada hasil, tegas, dan dominan. Ia memiliki dorongan kuat untuk memimpin dan mengendalikan situasi. Selalu fokus pada tujuan akhir dan tidak mau membuang waktu untuk hal-hal yang tidak produktif.',
+    desc2: 'Sebagai seorang Driver, ia senang menghadapi tantangan dan kompetisi. Ia membuat keputusan cepat berdasarkan logika dan fakta, bukan emosi. Cenderung langsung dan blak-blakan dalam komunikasi, yang terkadang membuat orang lain merasa tertekan. Ia memiliki ambisi tinggi dan terus mendorong dirinya serta orang lain untuk melampaui target.',
+    publicTraits: ['Tegas & Langsung','Berorientasi Hasil','Kompetitif','Pengambil Keputusan Cepat','Mandiri'],
+    privateTraits: ['Keras Kepala','Tidak Sabaran','Strategis','Egois (bisa)','Ambisi Tinggi'],
+    pressureTraits: ['Otoriter','Agresif','Impulsif','Tidak Mau Mendengar','Menekan Orang Lain'],
+    strengths: ['Kemampuan kepemimpinan alami yang kuat','Fokus pada pencapaian target dan hasil','Keberanian mengambil risiko yang terukur','Kemampuan membuat keputusan cepat dan tepat','Motivasi tinggi dalam situasi kompetitif','Efisiensi dan produktivitas yang luar biasa'],
+    challenges: ['Kurang memperhatikan perasaan orang lain','Terlalu impulsif dalam mengambil keputusan','Sulit mendelegasikan tugas karena ingin kontrol','Komunikasi terlalu keras sehingga intimidatif','Tidak sabar dengan proses yang lambat','Cenderung mengabaikan detail teknis'],
+    jobDesc: 'Individu D sangat cocok di posisi yang membutuhkan kepemimpinan kuat, pengambilan keputusan cepat, dan orientasi pada hasil. Mereka unggul dalam lingkungan kompetitif dan dinamis yang menantang.',
+    jobs: [
+      {cat:'Bisnis & Manajemen', items:['CEO / Direktur Utama','Manajer Operasional','Wirausahawan / Entrepreneur','Manajer Proyek','Direktur Penjualan','Business Development Manager']},
+      {cat:'Hukum & Pemerintahan', items:['Pengacara / Advokat','Politisi / Anggota DPR','Pejabat Pemerintah','Jaksa Penuntut Umum']},
+      {cat:'Militer & Keamanan', items:['Perwira Militer','Kepala Kepolisian','Manajer Keamanan','Security Director']},
+      {cat:'Olahraga & Kompetisi', items:['Pelatih Olahraga','Atlet Profesional','Manajer Tim Olahraga','Sports Director']},
+      {cat:'Keuangan & Investasi', items:['Trader / Investor','Fund Manager','Risk Analyst Senior','Investment Banker']}
+    ]
+  },
+
+  'I': {
+    name: 'INSPIRER – PEMBERI SEMANGAT',
+    desc1: 'Pribadi yang penuh energi, antusias, dan sangat berorientasi pada manusia. Ia memiliki kemampuan alami untuk mempengaruhi dan menginspirasi orang lain melalui komunikasi yang hangat dan karismatik.',
+    desc2: 'Seorang Inspirer sangat menikmati interaksi sosial dan selalu membawa suasana positif ke mana pun ia pergi. Ia berpikir besar dan penuh ide-ide kreatif, meskipun terkadang kurang fokus pada detail implementasi. Ia sangat persuasif dan pandai membangun jaringan hubungan yang luas. Optimisme adalah kekuatan terbesarnya dalam menghadapi tantangan.',
+    publicTraits: ['Antusias & Energik','Komunikatif','Optimistis','Persuasif','Karismatik'],
+    privateTraits: ['Kreatif','Impulsif','Sosial','Pencari Validasi','Emosional'],
+    pressureTraits: ['Terlalu Reaktif','Bicara Berlebihan','Menyalahkan Orang Lain','Kurang Fokus','Hipersensitif'],
+    strengths: ['Kemampuan komunikasi dan presentasi yang luar biasa','Membangun jaringan dan hubungan yang kuat','Kreativitas dan ide-ide inovatif yang segar','Membawa motivasi dan energi positif ke tim','Kemampuan persuasi dan negosiasi yang tinggi','Mudah beradaptasi dengan orang-orang baru'],
+    challenges: ['Kurang perhatian pada detail dan akurasi','Cenderung berjanji lebih dari yang bisa ditepati','Mudah terdistraksi dari tugas yang sedang berjalan','Pengambilan keputusan berdasarkan emosi','Kesulitan dalam pekerjaan yang membutuhkan kesendirian','Kurang konsisten dan disiplin dalam rutinitas'],
+    jobDesc: 'Individu I sangat cocok di lingkungan yang dinamis, penuh interaksi, dan membutuhkan kemampuan komunikasi serta persuasi yang tinggi. Mereka unggul saat bekerja bersama orang lain.',
+    jobs: [
+      {cat:'Penjualan & Marketing', items:['Sales Manager / Director','Brand Manager','Marketing Communications','Digital Marketing Specialist','Account Executive','Business Development']},
+      {cat:'Media & Hiburan', items:['Presenter TV / Radio','Aktor / Artis','Content Creator / YouTuber','Jurnalis','Social Media Manager','PR Specialist']},
+      {cat:'Pendidikan & Pelatihan', items:['Trainer / Motivator','Dosen / Guru','Corporate Trainer','Event Organizer','Coach / Mentor']},
+      {cat:'Pariwisata & Hospitality', items:['Tour Guide','Event Manager','Hotel Manager','Customer Relations Manager','Tourism Officer']},
+      {cat:'Rekrutmen & HR', items:['Recruitment Specialist','HR Business Partner','Employer Branding','Talent Acquisition Manager']}
+    ]
+  },
+
+  'S': {
+    name: 'SUPPORTER – PENYOKONG',
+    desc1: 'Pribadi yang stabil, setia, dan sangat berorientasi pada orang lain. Ia adalah pendengar yang luar biasa dan selalu berusaha menciptakan harmoni dalam tim. Konsistensi dan keandalan adalah ciri khasnya.',
+    desc2: 'Sebagai seorang Supporter, ia adalah tiang penyokong dalam sebuah tim. Ia sangat sabar, dapat dipercaya, dan selalu ada untuk orang-orang di sekitarnya. Ia tidak menyukai konflik dan selalu mencari jalan tengah yang memuaskan semua pihak. Loyalitasnya sangat tinggi, meskipun terkadang sulit menyampaikan pendapatnya sendiri.',
+    publicTraits: ['Sabar & Tenang','Dapat Dipercaya','Loyal','Pendengar Baik','Empati Tinggi'],
+    privateTraits: ['Introvert','Tidak Suka Perubahan','Setia','Menghindari Konflik','Sederhana'],
+    pressureTraits: ['Pasif-Agresif','Mengalah Berlebihan','Menarik Diri','Keras Kepala Diam','Resisten Perubahan'],
+    strengths: ['Loyalitas dan komitmen jangka panjang yang tinggi','Kemampuan mendengarkan dan berempati yang luar biasa','Menciptakan stabilitas dan harmoni dalam tim','Konsistensi dan keandalan dalam menyelesaikan tugas','Kemampuan mediasi dan menyelesaikan konflik','Fokus pada kebutuhan dan kesejahteraan orang lain'],
+    challenges: ['Sulit mengambil keputusan di bawah tekanan','Terlalu menghindari konflik hingga merugikan diri sendiri','Resistansi terhadap perubahan mendadak','Kesulitan mendelegasikan karena ingin membantu semua','Sering mengabaikan kebutuhan dan perasaan diri sendiri','Lambat dalam beradaptasi dengan situasi baru'],
+    jobDesc: 'Individu S sangat cocok di posisi yang membutuhkan kesabaran, empati, dan kemampuan membangun hubungan jangka panjang. Mereka unggul dalam lingkungan yang terstruktur dan stabil.',
+    jobs: [
+      {cat:'Kesehatan & Pelayanan', items:['Perawat / Bidan','Dokter Umum / Spesialis','Psikolog Klinis','Terapis / Rehabilitasi','Apoteker','Medical Social Worker']},
+      {cat:'Konseling & Sosial', items:['Konselor / Counselor','Pekerja Sosial','Psikolog Pendidikan','Family Therapist','Career Counselor','Pendamping Komunitas']},
+      {cat:'Pendidikan', items:['Guru SD / SMP','Guru Pendidikan Khusus','Dosen','Library Specialist','Educational Coordinator']},
+      {cat:'SDM & Administrasi', items:['HR Manager','Admin Officer','Office Manager','Customer Service Manager','Training Coordinator']},
+      {cat:'Non-Profit & Pemerintah', items:['Program Officer NGO','Petugas Sosial Pemerintah','Community Development','Relawan / Volunteer Coordinator']}
+    ]
+  },
+
+  'C': {
+    name: 'PERFECTIONIST – ANALIS',
+    desc1: 'Seorang yang praktis, cakap, dan unik. Ia mampu menilai diri sendiri dan kritis terhadap dirinya dan orang lain. Ia menyukai hal yang detail dan logis; secara alamiah ia sangat analitis. Karena menyimpan informasi, ia meneliti isu berulang-ulang kali.',
+    desc2: 'Ia cenderung malu dan tertutup; ia hati-hati dalam membuat keputusan berdasarkan logika, bukan emosi, selalu menggunakan pertanyaan "bagaimana dan mengapa". Ia mengerjakan sesuatu dengan sistematis dan akurat. Ia rapi dan terorganisir sebab ia merasa bahwa keadaan berantakan sama dengan mutu yang rendah. Sangat teliti dalam segala sesuatu seperti halnya dalam pekerjaan dan penggunaan waktunya. Ia merencanakan dan mengorganisir semua sisi kehidupannya. Kelambanan sangat mengganggunya dan tidak dapat ditolerir.',
+    publicTraits: ['Detail & Teliti','Butuh Situasi Stabil','Sistematik & Prosedural','Menghindari Konflik','Anti Kritik','Lambat Memutuskan'],
+    privateTraits: ['Pendiam','Anti Kritik','Perfeksionis','Cenderung Santai','Detail','Empati','Rapi','Organized','Kaku pada Metode & Prosedur'],
+    pressureTraits: ['Detail & Teliti','Butuh Situasi Stabil','Sistematik & Prosedural','Menghindari Konflik','Anti Kritik','Lambat Memutuskan','Pendendam','Anti Perubahan'],
+    strengths: ['Akurasi dan ketelitian dalam setiap pekerjaan yang sangat tinggi','Kemampuan analisis mendalam dan berpikir kritis','Perencanaan dan pengorganisasian yang sangat baik','Standar kualitas kerja yang konsisten dan tinggi','Kemampuan mengidentifikasi masalah dan solusi sistematis','Disiplin dan dedikasi terhadap prosedur yang berlaku'],
+    challenges: ['Lambat dalam pengambilan keputusan karena terlalu analitis','Sulit beradaptasi dengan perubahan mendadak','Terlalu kritis terhadap diri sendiri dan orang lain','Menghindari konflik meskipun konflik tersebut perlu diselesaikan','Kaku pada metode dan prosedur yang sudah ada','Sulit menerima kritik meskipun bersifat konstruktif'],
+    jobDesc: 'Individu C sangat cocok di posisi yang membutuhkan analisis mendalam, akurasi tinggi, dan prosedur kerja yang ketat. Mereka unggul dalam lingkungan yang terstruktur dengan standar kualitas yang jelas.',
+    jobs: [
+      {cat:'Perencanaan & Teknik', items:['Planner (any function)','Engineer (Installation, Technical)','Production Planner','Architect','Civil/Structural Engineer','System Analyst']},
+      {cat:'Sains & Riset', items:['Technical/Research (Chemist, Technician)','Academic Researcher','Statistician','Data Scientist','Laboratory Analyst','R&D Specialist']},
+      {cat:'Akademik & Pemerintahan', items:['Dosen / Academic','Government Worker / PNS','Policy Analyst','Government Auditor','Regulatory Affairs']},
+      {cat:'IT & Teknologi', items:['IT Management','Software Engineer','Database Administrator','Network Engineer','Cybersecurity Analyst','QA Engineer']},
+      {cat:'Quality & Kontrol', items:['Quality Controller','Prison Officer','Compliance Officer','Risk Manager','Internal Auditor','Financial Controller']}
+    ]
+  },
+
+  'DC': {
+    name: 'IMPLEMENTOR – PEMIMPIN ANALITIS',
+    desc1: 'Perpaduan kuat antara ketegasan dan akurasi. Individu DC adalah pemimpin yang tidak hanya tahu ke mana harus pergi, tetapi juga bagaimana sampai di sana dengan cara yang paling efisien dan terukur. Ia menetapkan standar tinggi untuk dirinya dan orang lain.',
+    desc2: 'Ia sangat fokus pada hasil berkualitas tinggi dan tidak mau berkompromi dengan standar yang rendah. Keputusannya berdasarkan data dan analisis, bukan perasaan. Ia cenderung perfeksionis dalam eksekusi, mendorong tim untuk selalu mencapai yang terbaik. Keinginannya untuk mengontrol kualitas sekaligus hasil membuat ia sangat efektif sebagai pemimpin teknis.',
+    publicTraits: ['Tegas & Analitis','Standar Tinggi','Berorientasi Kualitas','Mandiri','Strategis'],
+    privateTraits: ['Perfeksionis','Keras Kepala','Detail-Oriented','Logis','Demanding'],
+    pressureTraits: ['Otoriter-Kritis','Tidak Toleran Kesalahan','Terlalu Kaku','Mengisolasi Diri','Micro-manager'],
+    strengths: ['Kepemimpinan berbasis data dan analisis','Kemampuan membangun sistem kerja berkualitas tinggi','Perencanaan strategis yang detail dan terukur','Keputusan berdasarkan fakta bukan emosi','Standar eksekusi yang sangat tinggi','Kemampuan problem-solving yang mendalam'],
+    challenges: ['Terlalu demanding terhadap bawahan','Sulit mendelegasikan karena standar yang sangat tinggi','Komunikasi yang terlalu blak-blakan dan kritis','Resistansi terhadap perubahan yang tidak terencana','Kurang apresiasi terhadap kontribusi tim','Workaholic yang bisa membakar diri sendiri'],
+    jobDesc: 'Individu DC cocok di posisi kepemimpinan teknis yang membutuhkan standar kualitas tinggi dan orientasi hasil yang kuat.',
+    jobs: [
+      {cat:'Manajemen Teknis', items:['Engineering Manager','Operations Director','Technical Director','Quality Director','Production Manager','Systems Director']},
+      {cat:'Keuangan & Risiko', items:['Chief Financial Officer','Financial Controller','Risk Director','Head of Audit','Chief Compliance Officer']},
+      {cat:'IT Leadership', items:['CTO / Chief Technology Officer','IT Director','Solutions Architect','Head of Engineering','Principal Engineer']},
+      {cat:'Riset & Strategi', items:['Research Director','Strategic Planner','Business Intelligence Director','Head of Data Science']},
+      {cat:'Hukum & Regulasi', items:['General Counsel','Regulatory Affairs Director','Chief Legal Officer','Head of Compliance']}
+    ]
+  },
+
+  'DI': {
+    name: 'PROMOTER – PEMIMPIN KARISMATIK',
+    desc1: 'Kombinasi antara ketegasan D dan antusiasme I menghasilkan sosok yang sangat berpengaruh. Ia adalah pemimpin yang visioner sekaligus inspiratif – mampu menetapkan tujuan besar dan membawa orang lain untuk mencapainya dengan semangat.',
+    desc2: 'Individu DI sangat pandai menjual ide-ide besar dan memotivasi tim. Ia memiliki energi tinggi, optimisme yang menular, dan kemampuan untuk mengambil keputusan berani. Sangat cocok sebagai pemimpin perubahan yang membawa organisasi ke level berikutnya. Namun, ia perlu berhati-hati agar tidak terlalu impulsif.',
+    publicTraits: ['Karismatik','Visioner','Persuasif','Berani','Energik'],
+    privateTraits: ['Ambisius','Impulsif','Spontan','Kreatif','Dominan'],
+    pressureTraits: ['Manipulatif','Reaktif','Over-confident','Tidak Sabar','Agresif-Verbal'],
+    strengths: ['Kepemimpinan yang menginspirasi dan memotivasi','Kemampuan menjual visi dan ide besar','Jaringan relasi yang luas dan berpengaruh','Berani mengambil risiko yang diperhitungkan','Energi tinggi yang menggerakkan organisasi','Komunikasi yang sangat efektif dan persuasif'],
+    challenges: ['Terlalu impulsif dalam keputusan besar','Kurang perhatian pada detail operasional','Ekspektasi yang terlalu tinggi dari orang lain','Mudah bosan dengan rutinitas','Ego yang besar saat menerima kritik','Sulit fokus pada satu hal dalam jangka panjang'],
+    jobDesc: 'Individu DI adalah pemimpin karismatik yang unggul di peran yang membutuhkan visi besar, persuasi, dan kemampuan memobilisasi orang.',
+    jobs: [
+      {cat:'Kepemimpinan Bisnis', items:['CEO / Founder Startup','Chief Marketing Officer','VP of Sales','Entrepreneur','Business Development Director','Managing Director']},
+      {cat:'Politik & Publik', items:['Politisi / Anggota DPR','Walikota / Bupati','Diplomat','Juru Bicara Pemerintah','Aktivis Sosial']},
+      {cat:'Media & Pengaruh', items:['TV Host / Presenter','Motivational Speaker','Brand Ambassador','Influencer / Content Creator','Public Figure']},
+      {cat:'Penjualan & Marketing', items:['National Sales Director','Marketing Director','Brand Strategy Lead','Partnership Director']},
+      {cat:'Entertainment', items:['Film Director','Producer','Creative Director','Sports Agent','Talent Manager']}
+    ]
+  },
+
+  'DS': {
+    name: 'AGENT – KOORDINATOR HANDAL',
+    desc1: 'Perpaduan antara ketegasan D dan stabilitas S menghasilkan seorang yang efektif sekaligus dapat diandalkan. Ia tahu cara mendapatkan hasil sambil tetap menjaga hubungan yang baik dengan timnya.',
+    desc2: 'Individu DS adalah pemimpin yang praktis dan bumi. Ia menetapkan standar yang jelas namun tetap mendukung anggota timnya. Ia tidak suka konflik yang tidak perlu, tetapi tidak takut mengambil sikap tegas saat dibutuhkan. Cocok untuk peran manajerial yang membutuhkan keseimbangan antara hasil dan hubungan manusia.',
+    publicTraits: ['Praktis','Handal','Berorientasi Tujuan','Suportif','Stabil'],
+    privateTraits: ['Sabar','Tekun','Protektif','Loyal','Konsisten'],
+    pressureTraits: ['Pasif-Agresif','Keras Kepala','Resistansi Perubahan','Overprotektif','Diam-diam Marah'],
+    strengths: ['Kemampuan memimpin dengan pendekatan yang manusiawi','Konsistensi dan keandalan dalam eksekusi','Membangun tim yang solid dan loyal','Kemampuan mediasi dan manajemen konflik','Eksekusi rencana yang terstruktur dan tertib','Menjaga stabilitas organisasi di tengah perubahan'],
+    challenges: ['Terlalu konservatif dalam mengambil risiko','Sulit beradaptasi dengan perubahan cepat','Kadang terlalu melindungi tim dari tantangan','Pengambilan keputusan yang lambat dalam situasi baru','Kesulitan mengkonfrontasi performa rendah anggota tim','Resistansi terhadap inovasi yang belum terbukti'],
+    jobDesc: 'Individu DS unggul di posisi manajerial yang membutuhkan keseimbangan antara pencapaian target dan manajemen orang.',
+    jobs: [
+      {cat:'Manajemen Operasional', items:['Operations Manager','Supervisor / Kepala Bagian','Branch Manager','Field Operations Manager','Facility Manager','Store Manager']},
+      {cat:'Proyek & Koordinasi', items:['Project Manager','Program Coordinator','Site Manager','Construction Supervisor','Project Coordinator']},
+      {cat:'Kesehatan & Pelayanan', items:['Kepala Perawat','Hospital Department Head','Clinical Supervisor','Health Services Manager']},
+      {cat:'Pemerintahan', items:['Kepala Seksi / Kasubag','Camat / Lurah','Military / Police Officer','Administrative Director']},
+      {cat:'Pendidikan', items:['Kepala Sekolah','Academic Supervisor','Training Manager','Dean of Students']}
+    ]
+  },
+
+  'ID': {
+    name: 'MOTIVATOR – PENGGERAK TIM',
+    desc1: 'Seorang yang menggabungkan semangat sosial I dengan ketegasan D. Ia adalah penggerak yang membawa energi dan antusiasme sambil memastikan target tercapai. Sangat efektif dalam memimpin perubahan.',
+    desc2: 'Individu ID memiliki karisma yang kuat dan kemampuan untuk memotivasi siapa pun. Ia pandai dalam situasi kompetitif dan menikmati tantangan. Kombinasi semangat dan ketegasan membuatnya sangat cocok untuk peran sales leadership, manajemen kreatif, atau pengembangan organisasi.',
+    publicTraits: ['Enerjik','Karismatik','Kompetitif','Antusias','Persuasif'],
+    privateTraits: ['Ambisius','Impulsif','Egois (bisa)','Kreatif','Spontan'],
+    pressureTraits: ['Dominan','Reaktif','Bicara Berlebihan','Tidak Fokus','Mudah Frustrasi'],
+    strengths: ['Motivasi dan semangat yang sangat tinggi','Kemampuan membangun tim yang bersemangat','Kreativitas dalam mencari solusi baru','Kepemimpinan yang hangat dan menggerakkan','Jaringan relasi yang kuat','Kemampuan penjualan dan negosiasi yang tinggi'],
+    challenges: ['Kurang perhatian pada detail dan follow-through','Impulsif dalam mengambil keputusan','Kesulitan dalam pekerjaan yang monoton','Terlalu optimistik hingga mengabaikan risiko','Ego yang besar saat mendapat kritik','Konsistensi yang rendah dalam jangka panjang'],
+    jobDesc: 'Individu ID sangat efektif di posisi yang membutuhkan motivasi tim, kemampuan penjualan, dan kepemimpinan yang energik.',
+    jobs: [
+      {cat:'Sales & Bisnis', items:['Sales Director','Business Development Manager','Regional Manager','Key Account Manager','Commercial Director']},
+      {cat:'Kreatif & Marketing', items:['Creative Director','Marketing Manager','Brand Strategist','Communications Director','Campaign Manager']},
+      {cat:'HR & Pengembangan', items:['HR Director','Talent Development Manager','Learning & Development','Employee Engagement Manager']},
+      {cat:'Pelatihan', items:['Motivational Speaker','Corporate Trainer','Leadership Coach','Organizational Developer']},
+      {cat:'Startup & Inovasi', items:['Startup Founder','Product Manager','Growth Hacker','Innovation Manager']}
+    ]
+  },
+
+  'IS': {
+    name: 'COUNSELOR – PENASIHAT EMPATIK',
+    desc1: 'Individu IS adalah paduan sempurna antara kehangatan sosial dan stabilitas emosional. Ia sangat baik dalam membaca dan merespons kebutuhan orang lain, menjadikannya konselor dan pemimpin tim yang luar biasa.',
+    desc2: 'Dengan kemampuan komunikasi yang hangat dan empati yang mendalam, ia menciptakan lingkungan yang aman dan mendukung bagi orang-orang di sekitarnya. Ia adalah mediator alami yang mampu menyeimbangkan berbagai kepentingan dengan harmonis. Kehadiran dan dukungannya sangat dirasakan oleh tim.',
+    publicTraits: ['Hangat & Ramah','Empatik','Komunikatif','Mediator','Suportif'],
+    privateTraits: ['Sensitif','Tidak Asertif','Loyal','Menghindari Konflik','Peduli'],
+    pressureTraits: ['Terlalu Akomodatif','Tidak Tegas','Mengorbankan Diri','Emosional','Pasif'],
+    strengths: ['Empati yang sangat tinggi dan tulus','Kemampuan membangun kepercayaan dengan cepat','Komunikasi yang hangat dan menyejukkan','Kemampuan menyelesaikan konflik dengan damai','Dukungan emosional yang konsisten','Membangun budaya tim yang positif'],
+    challenges: ['Terlalu mengutamakan perasaan hingga melupakan tujuan','Kesulitan menyampaikan feedback negatif','Terlalu akomodatif terhadap permintaan orang lain','Pengambilan keputusan yang dipengaruhi emosi','Kesulitan menerima konflik sebagai sesuatu yang produktif','Sering menempatkan kebutuhan orang lain di atas diri sendiri'],
+    jobDesc: 'Individu IS sangat cocok di posisi yang membutuhkan empati tinggi, komunikasi yang hangat, dan kemampuan membangun hubungan yang bermakna.',
+    jobs: [
+      {cat:'Konseling & Psikologi', items:['Psikolog Klinis','Konselor Pernikahan','Terapis','Career Counselor','Life Coach','Psikolog Pendidikan']},
+      {cat:'Kesehatan & Perawatan', items:['Perawat Senior','Social Worker','Bidan','Occupational Therapist','Patient Advocate','Community Health Worker']},
+      {cat:'Pendidikan', items:['Guru / Dosen','Kepala Sekolah','School Counselor','Special Education Teacher','Childcare Director']},
+      {cat:'HR & Pengembangan', items:['HR Business Partner','Employee Relations Manager','Talent Development','Learning Specialist','Wellness Coordinator']},
+      {cat:'Komunitas & NGO', items:['Program Manager NGO','Community Organizer','Nonprofit Executive Director','Volunteer Coordinator']}
+    ]
+  },
+
+  'IC': {
+    name: 'APPRAISER – PENILAI KREATIF',
+    desc1: 'Individu IC menggabungkan kreativitas sosial dengan ketelitian analitis. Ia mampu menghasilkan ide-ide kreatif sambil tetap memastikan kualitas dan akurasi yang tinggi.',
+    desc2: 'Ia sangat baik dalam mengevaluasi dan mengkomunikasikan informasi kompleks dengan cara yang menarik. Kemampuan analitisnya membuatnya dapat diandalkan, sementara sisi sosialnya membuatnya efektif dalam kolaborasi. Cocok untuk peran yang membutuhkan kreativitas berbasis data.',
+    publicTraits: ['Kreatif & Analitis','Komunikatif','Kritis','Inovatif','Detail'],
+    privateTraits: ['Perfeksionis','Impulsif (bisa)','Sensitif','Analitis','Sosial'],
+    pressureTraits: ['Over-kritis','Reaktif','Tidak Konsisten','Hipersensitif','Terlalu Idealistis'],
+    strengths: ['Kemampuan analisis yang disampaikan dengan menarik','Kreativitas yang terstruktur dan berkualitas','Komunikasi efektif tentang topik kompleks','Inovasi berbasis data dan riset','Kemampuan evaluasi yang objektif','Jaringan profesional yang luas'],
+    challenges: ['Perfeksionisme yang menghambat produktivitas','Kesulitan menerima standar di bawah ekspektasi','Kadang terlalu kritis dalam kolaborasi','Impulsif dalam ide namun lambat dalam eksekusi','Kesulitan memprioritaskan saat terlalu banyak ide','Sensitif terhadap kritik atas karya sendiri'],
+    jobDesc: 'Individu IC cocok di posisi kreatif yang juga membutuhkan akurasi dan kemampuan analitis yang kuat.',
+    jobs: [
+      {cat:'Media & Konten', items:['Editor Senior','Content Strategist','UX/UI Designer','Copywriter','Journalist / Wartawan','Digital Producer']},
+      {cat:'Riset & Analisis', items:['Market Research Analyst','Media Analyst','Research Journalist','Policy Researcher','Social Analyst']},
+      {cat:'Desain & Kreatif', items:['Creative Director','Art Director','Brand Designer','Instructional Designer','Curriculum Developer']},
+      {cat:'Konsultansi', items:['Management Consultant','Strategy Consultant','Business Analyst','Communications Consultant']},
+      {cat:'Akademik', items:['Dosen Kreatif','Educational Researcher','Academic Editor','Instructional Technologist']}
+    ]
+  },
+
+  'SC': {
+    name: 'SPECIALIST – KOORDINATOR TELITI',
+    desc1: 'Individu SC adalah kombinasi antara stabilitas S dan ketelitian C – menghasilkan seorang profesional yang sangat dapat diandalkan, sistematis, dan konsisten. Ia bekerja paling baik dalam lingkungan yang terstruktur dengan prosedur yang jelas.',
+    desc2: 'Ia menggabungkan empati dan kesabaran dengan analisis yang mendalam. Seorang tim yang sangat berharga karena ia tidak hanya mengerjakan tugas dengan akurat, tetapi juga memastikan orang-orang di sekitarnya merasa nyaman dan dukung. Ketenangan dan ketekunannya menjadi aset besar dalam pekerjaan.',
+    publicTraits: ['Teliti & Sabar','Sistematis','Dapat Dipercaya','Konsisten','Suportif'],
+    privateTraits: ['Introvert','Resistansi Perubahan','Loyalitas Tinggi','Perfeksionis','Empatik'],
+    pressureTraits: ['Pasif-Kaku','Overanalyze','Lambat Memutuskan','Menarik Diri','Tidak Fleksibel'],
+    strengths: ['Kombinasi ketelitian dan empati yang langka','Konsistensi dan keandalan yang sangat tinggi','Kemampuan memastikan kualitas dan standar prosedur','Pendukung tim yang tulus dan dapat diandalkan','Kesabaran dalam menghadapi tugas kompleks','Kemampuan dokumentasi dan pelaporan yang akurat'],
+    challenges: ['Sulit beradaptasi dengan perubahan mendadak','Lambat dalam pengambilan keputusan','Terlalu berhati-hati hingga menunda tindakan','Resistansi terhadap cara kerja baru','Kesulitan berkomunikasi kebutuhan sendiri','Cenderung menyembunyikan ketidaksetujuan'],
+    jobDesc: 'Individu SC adalah spesialis yang teliti dan dapat diandalkan, sangat cocok di posisi teknis dan administratif yang membutuhkan akurasi tinggi dan dukungan tim.',
+    jobs: [
+      {cat:'Teknis & Laboratorium', items:['Medical Laboratory Technologist','QA/QC Specialist','Lab Analyst','Technical Specialist','Process Engineer','Biomedical Technician']},
+      {cat:'IT & Sistem', items:['IT Support Specialist','Network Administrator','Database Specialist','Systems Coordinator','Technical Writer']},
+      {cat:'Administrasi', items:['Administrative Coordinator','Office Manager','Executive Assistant','Document Controller','Records Manager']},
+      {cat:'Keuangan', items:['Accountant / Akuntan','Financial Analyst','Auditor','Tax Specialist','Budget Analyst','Bookkeeper']},
+      {cat:'Pemerintah & Pendidikan', items:['PNS / Civil Servant','Academic Coordinator','Program Administrator','Curriculum Coordinator','Government Analyst']}
+    ]
+  },
+
+  'CS': {
+    name: 'PERFECTIONIST – ANALIS STABIL',
+    desc1: 'Seorang yang praktis, cakap, dan unik. Ia orang yang mampu menilai diri sendiri dan kritis terhadap dirinya dan orang lain. Ia menyukai hal yang detil dan logis; secara alamiah ia sangat analitis. Karena menyimpan informasi, ia meneliti isu berulang-ulang kali.',
+    desc2: 'Ia cenderung malu dan tertutup; ia hati-hati dalam membuat keputusan yang berdasarkan pada logika, bukan emosi, selalu menggunakan pertanyaan "bagaimana dan mengapa". Ia mengerjakan sesuatu dengan sistematis dan akurat. Ia rapi dan terorganisir sebab ia merasa bahwa keadaan berantakan sama dengan mutu yang rendah; demikian juga, rapi dan teratur merupakan mutu yang tinggi. Sangat teliti dalam segala sesuatu seperti halnya dalam pekerjaan dan penggunaan waktunya. Ia merencanakan dan mengorganisir semua sisi kehidupannya. Kelambanan sangat mengganggunya dan tak dapat ditolerir.',
+    publicTraits: ['Detail & Teliti','Butuh Situasi Stabil','Sistematik & Prosedural','Menghindari Konflik','Anti Kritik','Lambat Memutuskan','Pendendam','Anti Perubahan'],
+    privateTraits: ['Pendiam','Anti Kritik','Perfeksionis','Cenderung Santai','Detail','Empati','Rapi','Organized','Kaku pada Metode & Prosedur','Sulit Adaptasi'],
+    pressureTraits: ['Detail & Teliti','Butuh Situasi Stabil','Sistematik & Prosedural','Menghindari Konflik','Anti Kritik','Lambat Memutuskan','Pendendam','Anti Perubahan'],
+    strengths: ['Ketelitian dan akurasi yang sangat tinggi dalam setiap pekerjaan','Kemampuan analisis mendalam dan sistematis','Konsistensi dan keandalan yang tidak perlu dipertanyakan','Standar kualitas yang sangat tinggi dan terjaga','Kemampuan merencanakan dan mengorganisir secara menyeluruh','Dukungan prosedural yang menjamin mutu dan integritas kerja'],
+    challenges: ['Lambat dalam pengambilan keputusan karena terlalu berhati-hati','Resistansi kuat terhadap perubahan mendadak','Terlalu kritis terhadap diri sendiri dan orang lain','Menghindari konflik meskipun konfrontasi diperlukan','Kaku pada metode lama meskipun ada cara yang lebih efisien','Sulit menerima kritik meski bersifat membangun'],
+    jobDesc: 'Individu CS (Perfectionist) sangat cocok di posisi yang membutuhkan analisis mendalam, prosedur ketat, dan standar kualitas tinggi, dengan lingkungan yang stabil dan terstruktur.',
+    jobs: [
+      {cat:'Perencanaan & Teknik', items:['Planner (any function)','Engineer (Installation, Technical)','Technical Specialist','Production Planner','Process Engineer']},
+      {cat:'Sains & Riset', items:['Technical/Research (Chemist, Technician)','Academic / Peneliti','Statistician','Laboratory Analyst','R&D Engineer']},
+      {cat:'Akademik & Pemerintahan', items:['Academic / Dosen','Government Worker / PNS','Policy Analyst','Regulatory Affairs','Government Auditor']},
+      {cat:'IT & Teknologi', items:['IT Management','Software Engineer','QA Engineer','Database Administrator','Systems Administrator']},
+      {cat:'Quality & Kontrol', items:['Quality Controller','Prison Officer','Compliance Officer','Internal Auditor','Financial Controller']}
+    ]
+  },
+
+  'CD': {
+    name: 'ACHIEVER – PEMIMPIN ANALIS',
+    desc1: 'Individu CD menggabungkan analisis tajam C dengan dorongan kuat D. Ia adalah pemimpin berbasis data yang sangat efektif – tidak hanya memahami masalah secara mendalam, tetapi juga mengambil tindakan tegas untuk mengatasinya.',
+    desc2: 'Ia memiliki standar yang sangat tinggi dan tidak mau berkompromi dengan kualitas. Keputusannya selalu didukung oleh analisis yang kuat. Ia sangat efektif dalam situasi yang membutuhkan solusi teknis sekaligus kepemimpinan yang kuat.',
+    publicTraits: ['Analitis & Tegas','Standar Tinggi','Strategis','Mandiri','Presisi'],
+    privateTraits: ['Perfeksionis','Demanding','Logis','Kritis','Keras Kepala'],
+    pressureTraits: ['Otoriter-Kritis','Tidak Toleran Kesalahan','Micro-manager','Mengisolasi Diri','Dingin'],
+    strengths: ['Kepemimpinan berbasis analisis yang kuat','Pengambilan keputusan berdasarkan data','Standar kualitas dan eksekusi yang sangat tinggi','Kemampuan problem-solving yang mendalam','Perencanaan strategis yang terukur','Efisiensi dan hasil yang konsisten'],
+    challenges: ['Terlalu kritis dan demanding terhadap orang lain','Sulit mendelegasikan karena standar yang sangat tinggi','Komunikasi yang dingin dan terlalu to-the-point','Resistansi terhadap perubahan tidak terencana','Kurang apresiasi terhadap kontribusi emosional','Workaholic yang berisiko burnout'],
+    jobDesc: 'Individu CD unggul di posisi teknis-strategis yang membutuhkan gabungan analisis mendalam dan kepemimpinan tegas.',
+    jobs: [
+      {cat:'Teknis & Engineering', items:['Chief Engineer','Technical Director','R&D Director','Principal Scientist','Engineering Lead','Architect Utama']},
+      {cat:'Data & Teknologi', items:['Head of Data Science','Analytics Director','CTO','AI/ML Lead','Chief Data Officer']},
+      {cat:'Keuangan', items:['CFO / Chief Financial Officer','Head of Risk','Controller','Investment Director','Treasurer']},
+      {cat:'Hukum', items:['Senior Counsel','Chief Legal Officer','Compliance Director','Head of Regulatory']},
+      {cat:'Riset', items:['Research Director','Head of Policy','Scientific Director','Principal Investigator']}
+    ]
+  },
+
+  'SI': {
+    name: 'SOCIALIZER – PENYATU TIM',
+    desc1: 'Individu SI adalah perpaduan sempurna antara stabilitas S dan kehangatan I. Ia adalah jembatan dalam tim – menghubungkan orang-orang, menciptakan harmoni, dan memastikan semua orang merasa didengar dan dihargai.',
+    desc2: 'Ia sangat baik dalam menciptakan lingkungan kerja yang positif dan inklusif. Energinya positif dan selalu menyemangati orang lain, sementara konsistensinya membuatnya dapat diandalkan. Sangat efektif dalam peran yang membutuhkan manajemen hubungan dan pengembangan tim.',
+    publicTraits: ['Hangat & Stabil','Inklusif','Motivator','Dapat Diandalkan','Positif'],
+    privateTraits: ['Sensitif','Tidak Konfrontatif','Loyal','Antusias','Sabar'],
+    pressureTraits: ['Terlalu Akomodatif','Pasif','Mengorbankan Diri','Oversharing','Tidak Fokus'],
+    strengths: ['Kemampuan membangun tim yang solid dan harmonis','Energi positif yang meningkatkan morale tim','Komunikasi yang hangat dan inklusif','Loyalitas dan konsistensi yang tinggi','Kemampuan memotivasi dan menginspirasi','Mediasi konflik yang efektif dan damai'],
+    challenges: ['Terlalu mengutamakan harmoni hingga mengorbankan hasil','Kesulitan menyampaikan kritik atau feedback negatif','Tidak tegas dalam pengambilan keputusan sulit','Terlalu bergantung pada approval orang lain','Kesulitan menghadapi konflik yang tidak bisa dihindari','Produktivitas bisa turun saat suasana tim tidak harmonis'],
+    jobDesc: 'Individu SI unggul di posisi yang membutuhkan kemampuan membangun hubungan, motivasi tim, dan manajemen komunitas.',
+    jobs: [
+      {cat:'HR & Pengembangan', items:['HR Generalist','Employee Engagement Manager','Culture & People Manager','Talent Development Specialist','Wellness Program Manager']},
+      {cat:'Komunitas & Sosial', items:['Community Manager','CSR Manager','Program Officer','Social Impact Manager','Volunteer Coordinator']},
+      {cat:'Pendidikan & Pelatihan', items:['Teacher / Guru','Corporate Trainer','Workshop Facilitator','School Counselor','Curriculum Developer']},
+      {cat:'Pelayanan Publik', items:['Public Relations Officer','Customer Experience Manager','Community Liaison','Social Services Coordinator']},
+      {cat:'Kesehatan', items:['Health Educator','Patient Care Coordinator','Community Health Worker','Mental Health Support Worker']}
+    ]
+  },
+
+  'CI': {
+    name: 'ASSESSOR – ANALIS KOMUNIKATIF',
+    desc1: 'Individu CI menggabungkan ketelitian analitis C dengan kemampuan komunikasi I. Ia adalah komunikator yang juga seorang analis – mampu tidak hanya menganalisis data, tetapi juga menyampaikannya dengan cara yang menarik dan mudah dipahami.',
+    desc2: 'Ia adalah evaluator yang objektif sekaligus komunikator yang efektif. Kemampuannya untuk menganalisis situasi secara mendalam dan kemudian mengkomunikasikan temuan tersebut dengan jelas membuatnya sangat berharga dalam organisasi.',
+    publicTraits: ['Analitis & Komunikatif','Objektif','Persuasif','Detail','Inovatif'],
+    privateTraits: ['Introvert (bisa)','Perfeksionis','Kreatif','Sensitif','Kritis'],
+    pressureTraits: ['Over-analitis','Terlalu Kritis','Reaktif','Hipersensitif','Menunda Keputusan'],
+    strengths: ['Analisis mendalam yang dikomunikasikan dengan jelas','Kemampuan riset dan evaluasi yang tinggi','Penyampaian informasi kompleks secara efektif','Kreativitas yang berbasis fakta dan data','Jaringan profesional yang dibangun atas kepercayaan','Kemampuan problem-solving yang komunikatif'],
+    challenges: ['Perfeksionisme yang menghambat proses','Terlalu kritis terhadap orang lain dan situasi','Kesulitan menerima ketidaksempurnaan','Kadang terlalu banyak analisis sebelum bertindak','Sensitif terhadap kritik pada karya analisis','Kesulitan berkomitmen pada satu sudut pandang'],
+    jobDesc: 'Individu CI cocok di posisi yang menggabungkan analisis mendalam dengan kemampuan komunikasi dan presentasi yang kuat.',
+    jobs: [
+      {cat:'Riset & Analisis', items:['Research Analyst','Market Research Manager','Intelligence Analyst','Policy Research Specialist','Business Analyst']},
+      {cat:'Jurnalisme & Media', items:['Investigative Journalist','Data Journalist','Editor','Media Analyst','Content Analyst']},
+      {cat:'Konsultansi', items:['Management Consultant','Strategy Consultant','Communications Consultant','Research Consultant']},
+      {cat:'Akademik', items:['Dosen / Academic','Research Associate','Academic Writer','Subject Matter Expert']},
+      {cat:'UX & Produk', items:['UX Researcher','Product Analyst','User Research Lead','CX Analyst']}
+    ]
+  }
+};
+
+// Fallback for missing combos
+function getProfile(primary, secondary) {
+  const combo1 = primary + secondary;
+  const combo2 = secondary + primary;
+  if (profiles[combo1]) return profiles[combo1];
+  if (profiles[combo2]) return profiles[combo2];
+  if (profiles[primary]) return profiles[primary];
+  return profiles['C']; // default
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let participant = {};
+let mAnswers = new Array(24).fill(null);
+let lAnswers = new Array(24).fill(null);
+let chartInstances = {};
+
+// ============================================================
+// INTRO
+// ============================================================
+function startTest() {
+  const name = document.getElementById('inp-name').value.trim();
+  const age = document.getElementById('inp-age').value.trim();
+  const gender = document.getElementById('inp-gender').value;
+  const date = document.getElementById('inp-date').value;
+  const err = document.getElementById('intro-error');
+
+  if (!name || !age || !gender || !date) {
+    err.style.display = 'block';
+    err.textContent = 'Harap lengkapi semua data diri sebelum memulai tes.';
+    return;
+  }
+  err.style.display = 'none';
+
+  participant = { name, age, gender, date };
+  document.getElementById('test-participant-name').textContent = name + ' | ' + gender + ' | ' + age + ' tahun';
+
+  showPage('page-test');
+  renderQuestions();
+  updateProgress();
+}
+
+// ============================================================
+// RENDER QUESTIONS
+// ============================================================
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  for (let row = 0; row < 8; row++) {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'q-group';
+
+    for (let col = 0; col < 3; col++) {
+      const qi = row * 3 + col;
+      const q = questions[qi];
+
+      const block = document.createElement('div');
+      block.className = 'q-block';
+
+      // Header: [M col] [L col] [Gambaran Diri] [No. badge]
+      const header = document.createElement('div');
+      header.className = 'q-header';
+      header.innerHTML = `
+        <div class="q-col-head m">M</div>
+        <div class="q-col-head l">L</div>
+        <div class="q-col-head desc">Gambaran Diri</div>
+        <span class="q-num">${qi+1}</span>`;
+      block.appendChild(header);
+
+      // Option rows
+      q.options.forEach((opt, oi) => {
+        const row_el = document.createElement('div');
+        row_el.className = 'option-row';
+        row_el.id = `row-${qi}-${oi}`;
+        row_el.innerHTML = `
+          <div class="radio-cell m-cell"><input type="radio" name="m_${qi}" value="${oi}" onchange="onMChange(${qi},${oi})"></div>
+          <div class="radio-cell l-cell"><input type="radio" name="l_${qi}" value="${oi}" onchange="onLChange(${qi},${oi})"></div>
+          <div class="option-text">${opt}</div>`;
+        block.appendChild(row_el);
+      });
+
+      // Conflict warning
+      const warn = document.createElement('div');
+      warn.className = 'conflict-warning';
+      warn.id = `warn-${qi}`;
+      warn.style.display = 'none';
+      warn.innerHTML = '⚠ M dan L tidak boleh sama!';
+      block.appendChild(warn);
+
+      groupDiv.appendChild(block);
+    }
+    container.appendChild(groupDiv);
+  }
+}
+
+function onMChange(qi, oi) {
+  mAnswers[qi] = oi;
+  updateRowHighlights(qi);
+  checkConflict(qi);
+  updateProgress();
+}
+
+function onLChange(qi, oi) {
+  lAnswers[qi] = oi;
+  updateRowHighlights(qi);
+  checkConflict(qi);
+  updateProgress();
+}
+
+function updateRowHighlights(qi) {
+  const m = mAnswers[qi];
+  const l = lAnswers[qi];
+  for (let oi = 0; oi < 4; oi++) {
+    const rowEl = document.getElementById(`row-${qi}-${oi}`);
+    if (!rowEl) continue;
+    rowEl.classList.remove('selected-m','selected-l');
+    if (oi === m) rowEl.classList.add('selected-m');
+    if (oi === l) rowEl.classList.add('selected-l');
+  }
+}
+
+function checkConflict(qi) {
+  const warn = document.getElementById(`warn-${qi}`);
+  if (!warn) return;
+  if (mAnswers[qi] !== null && lAnswers[qi] !== null && mAnswers[qi] === lAnswers[qi]) {
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+function updateProgress() {
+  let done = 0;
+  for (let i = 0; i < 24; i++) {
+    if (mAnswers[i] !== null && lAnswers[i] !== null && mAnswers[i] !== lAnswers[i]) done++;
+  }
+  const pct = (done / 24) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = done + '/24';
+}
+
+// ============================================================
+// SUBMIT TEST
+// ============================================================
+function submitTest() {
+  const errors = [];
+  for (let i = 0; i < 24; i++) {
+    if (mAnswers[i] === null || lAnswers[i] === null) {
+      errors.push(i + 1);
+    } else if (mAnswers[i] === lAnswers[i]) {
+      errors.push(i + 1);
+    }
+  }
+
+  const banner = document.getElementById('validation-banner');
+  if (errors.length > 0) {
+    banner.style.display = 'block';
+    banner.innerHTML = `⚠ Harap lengkapi semua pertanyaan dengan benar. Soal yang belum/salah: <strong>${errors.join(', ')}</strong>. Pastikan M dan L tidak memilih pilihan yang sama.`;
+    document.querySelector('.test-body').scrollTop = 0;
+    window.scrollTo(0, 0);
+    return;
+  }
+  banner.style.display = 'none';
+
+  calculateAndShowResults();
+  showPage('page-results');
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// CALCULATE SCORES
+// ============================================================
+function calculateAndShowResults() {
+  const mostScores = {D:0,I:0,S:0,C:0};
+  const leastScores = {D:0,I:0,S:0,C:0};
+
+  for (let qi = 0; qi < 24; qi++) {
+    const mType = discKey[qi][mAnswers[qi]];
+    const lType = discKey[qi][lAnswers[qi]];
+    mostScores[mType]++;
+    leastScores[lType]++;
+  }
+
+  const mStar = 24 - (mostScores.D + mostScores.I + mostScores.S + mostScores.C);
+  const lStar = 24 - (leastScores.D + leastScores.I + leastScores.S + leastScores.C);
+
+  const changeScores = {
+    D: mostScores.D - leastScores.D,
+    I: mostScores.I - leastScores.I,
+    S: mostScores.S - leastScores.S,
+    C: mostScores.C - leastScores.C
+  };
+
+  // Fill score table
+  document.getElementById('r-name').textContent = participant.name;
+  document.getElementById('r-age').textContent = participant.age + ' tahun';
+  document.getElementById('r-gender').textContent = participant.gender;
+  document.getElementById('r-date').textContent = formatDate(participant.date);
+
+  document.getElementById('s-m-d').textContent = mostScores.D;
+  document.getElementById('s-m-i').textContent = mostScores.I;
+  document.getElementById('s-m-s').textContent = mostScores.S;
+  document.getElementById('s-m-c').textContent = mostScores.C;
+  document.getElementById('s-m-star').textContent = Math.max(0,mStar);
+  document.getElementById('s-m-tot').textContent = 24;
+
+  document.getElementById('s-l-d').textContent = leastScores.D;
+  document.getElementById('s-l-i').textContent = leastScores.I;
+  document.getElementById('s-l-s').textContent = leastScores.S;
+  document.getElementById('s-l-c').textContent = leastScores.C;
+  document.getElementById('s-l-star').textContent = Math.max(0,lStar);
+  document.getElementById('s-l-tot').textContent = 24;
+
+  document.getElementById('s-c-d').textContent = changeScores.D;
+  document.getElementById('s-c-i').textContent = changeScores.I;
+  document.getElementById('s-c-s').textContent = changeScores.S;
+  document.getElementById('s-c-c').textContent = changeScores.C;
+
+  // Charts
+  const normalize = (raw) => Math.max(-8, Math.min(8, (raw - 6) * (4/3)));
+  const mostNorm = [normalize(mostScores.D), normalize(mostScores.I), normalize(mostScores.S), normalize(mostScores.C)];
+  const leastNorm = [normalize(leastScores.D), normalize(leastScores.I), normalize(leastScores.S), normalize(leastScores.C)];
+  const changeArr = [changeScores.D, changeScores.I, changeScores.S, changeScores.C];
+
+  renderChart('chart-most', mostNorm, '#1a3260');
+  renderChart('chart-least', leastNorm, '#b8952e');
+  renderChart('chart-change', changeArr, '#c0392b');
+
+  // Determine personality type
+  const mostArr = [
+    {key:'D',val:mostScores.D},
+    {key:'I',val:mostScores.I},
+    {key:'S',val:mostScores.S},
+    {key:'C',val:mostScores.C}
+  ].sort((a,b) => b.val - a.val);
+
+  const leastArr = [
+    {key:'D',val:leastScores.D},
+    {key:'I',val:leastScores.I},
+    {key:'S',val:leastScores.S},
+    {key:'C',val:leastScores.C}
+  ].sort((a,b) => b.val - a.val);
+
+  const primary = mostArr[0].key;
+  const secondary = mostArr[1].key;
+
+  const profile = getProfile(primary, secondary);
+
+  // Render personality type cards
+  document.getElementById('r-type-public').textContent = profile.name;
+  document.getElementById('r-type-private').textContent = profile.name;
+  document.getElementById('r-type-pressure').textContent = profile.name;
+
+  const renderTags = (id, arr) => {
+    const el = document.getElementById(id);
+    el.innerHTML = arr.map(t => `<span class="trait-tag">${t}</span>`).join('');
+  };
+  renderTags('r-traits-public', profile.publicTraits);
+  renderTags('r-traits-private', profile.privateTraits);
+  renderTags('r-traits-pressure', profile.pressureTraits);
+
+  // Description
+  document.getElementById('r-desc-main').textContent = profile.desc1;
+  document.getElementById('r-desc-detail').textContent = profile.desc2;
+
+  // Trait lists
+  const renderList = (id, arr) => {
+    const el = document.getElementById(id);
+    el.innerHTML = arr.map(t => `<li>${t}</li>`).join('');
+  };
+  renderList('r-positive-traits', profile.publicTraits);
+  renderList('r-negative-traits', profile.publicTraits.slice(-3).concat(profile.privateTraits.slice(-3)));
+  renderList('r-pressure-traits', profile.pressureTraits);
+  renderList('r-strengths', profile.strengths);
+  renderList('r-challenges', profile.challenges);
+
+  // Job match
+  document.getElementById('r-job-desc').textContent = profile.jobDesc;
+  const jobsGrid = document.getElementById('r-jobs-grid');
+  jobsGrid.innerHTML = profile.jobs.map(cat => `
+    <div class="job-category">
+      <div class="job-cat-title">${cat.cat}</div>
+      <ul class="job-list-items">
+        ${cat.items.map(j => `<li>${j}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderChart(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+  }
+  const colors = ['#c0392b','#e67e22','#27ae60','#2980b9'];
+  chartInstances[canvasId] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['D','I','S','C'],
+      datasets: [{
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        pointBackgroundColor: colors,
+        pointBorderColor: colors,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+        tension: 0.2,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` Skor: ${ctx.parsed.y.toFixed(1)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: -8, max: 8,
+          ticks: {
+            stepSize: 2,
+            font: { size: 10 },
+            color: '#666'
+          },
+          grid: { color: '#e8e8e8' }
+        },
+        x: {
+          ticks: {
+            font: { size: 12, weight: '700' },
+            color: (ctx) => ['#c0392b','#e67e22','#27ae60','#2980b9'][ctx.index]
+          },
+          grid: { color: '#e8e8e8' }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function restartTest() {
+  mAnswers = new Array(24).fill(null);
+  lAnswers = new Array(24).fill(null);
+  participant = {};
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-age').value = '';
+  document.getElementById('inp-gender').value = '';
+  document.getElementById('inp-date').value = '';
+  showPage('page-intro');
+  window.scrollTo(0, 0);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Set default date
+document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+
+// Hide loading overlay
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const lo = document.getElementById('loading-overlay');
+    lo.classList.add('hidden');
+    setTimeout(() => lo.style.display = 'none', 600);
+  }, 800);
+});
+</script>
+</body>
+</html>
