@@ -1727,14 +1727,16 @@ function updateProgress() {
 // ============================================================
 function startTimer() {
   stopTimer();
-  tick();
+  // Set interval FIRST so stopTimer() inside tick() can actually clear it
   timerInterval = setInterval(tick, 1000);
+  tick(); // immediate first render
 }
 
 function tick() {
+  if (timedOut) return; // guard: ignore ticks after time-up
   const rem = getRemainingSeconds(testStartTimestamp);
   updateTimerDisplay(rem);
-  if (rem <= 0) { stopTimer(); triggerTimeup(); }
+  if (rem <= 0) { triggerTimeup(); }
 }
 
 function stopTimer() {
@@ -1745,25 +1747,39 @@ function updateTimerDisplay(rem) {
   const mm  = String(Math.floor(rem / 60)).padStart(2,'0');
   const ss  = String(rem % 60).padStart(2,'0');
   const lbl = mm + ':' + ss;
-  document.getElementById('timer-display').textContent = lbl;
-  document.getElementById('timer-pill').textContent    = '\u23F1 ' + lbl;
+  const td = document.getElementById('timer-display');
+  const tp = document.getElementById('timer-pill');
+  if (td) td.textContent = lbl;
+  if (tp) tp.textContent = '\u23F1 ' + lbl;
 
-  const CIRC = 175.93;
-  document.getElementById('timer-ring').style.strokeDashoffset = CIRC * (1 - rem / TIMER_TOTAL);
-
+  const ring = document.getElementById('timer-ring');
+  if (ring) {
+    const CIRC = 175.93;
+    ring.style.strokeDashoffset = CIRC * (1 - rem / TIMER_TOTAL);
+  }
   const wrap = document.getElementById('timer-wrap');
-  wrap.classList.remove('warn','danger');
-  if      (rem <= 60)  wrap.classList.add('danger');
-  else if (rem <= 120) wrap.classList.add('warn');
+  if (wrap) {
+    wrap.classList.remove('warn','danger');
+    if      (rem <= 60)  wrap.classList.add('danger');
+    else if (rem <= 120) wrap.classList.add('warn');
+  }
 }
 
 function triggerTimeup() {
+  if (timedOut) return; // prevent double-trigger
   timedOut = true;
+  stopTimer();
+  clearSession();
+  // Navigate to results FIRST — always, even if calculate throws
+  showPage('page-results');
+  window.scrollTo(0, 0);
+  try { calculateAndShowResults(true); } catch(e) { console.error('Calc error:', e); }
   document.getElementById('timeup-overlay').classList.add('show');
 }
+
 function confirmTimeup() {
   document.getElementById('timeup-overlay').classList.remove('show');
-  submitTestForced();
+  // Results already rendered — overlay was just a notification
 }
 
 // ============================================================
@@ -1782,14 +1798,9 @@ function submitTest() {
   }
   banner.style.display = 'none';
   stopTimer(); clearSession();
+  showPage('page-results');
+  window.scrollTo(0,0);
   calculateAndShowResults(false);
-  showPage('page-results'); window.scrollTo(0,0);
-}
-
-function submitTestForced() {
-  stopTimer(); clearSession();
-  calculateAndShowResults(true);
-  showPage('page-results'); window.scrollTo(0,0);
 }
 
 // ============================================================
@@ -1907,9 +1918,13 @@ window.addEventListener('load', () => {
     if (rem > 0) {
       showResumeBanner(session, rem);
     } else {
-      // Time already ran out while the tab was closed — restore & auto-submit
-      resumeSession(session);
-      triggerTimeup();
+      // Time already ran out while the tab was closed — restore state and go straight to results
+      participant        = session.participant;
+      mAnswers           = session.mAnswers;
+      lAnswers           = session.lAnswers;
+      testStartTimestamp = session.startTimestamp;
+      timedOut           = false; // triggerTimeup will set it true
+      triggerTimeup();            // renders results + shows overlay
     }
   }
 });
