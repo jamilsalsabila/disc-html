@@ -1770,11 +1770,15 @@ function triggerTimeup() {
   timedOut = true;
   stopTimer();
   clearSession();
-  // Navigate to results FIRST — always, even if calculate throws
+  // Navigate to results page first so canvas elements are visible
   showPage('page-results');
   window.scrollTo(0, 0);
-  try { calculateAndShowResults(true); } catch(e) { console.error('Calc error:', e); }
-  document.getElementById('timeup-overlay').classList.add('show');
+  // Defer calculation by one frame — gives browser time to paint the
+  // results page (and its Chart.js canvases) before we render into them
+  setTimeout(() => {
+    calculateAndShowResults(true);
+    document.getElementById('timeup-overlay').classList.add('show');
+  }, 80);
 }
 
 function confirmTimeup() {
