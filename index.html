@@ -1857,7 +1857,7 @@ function calculateAndShowResults(isForced) {
 
   const list = (id, arr) => { document.getElementById(id).innerHTML = arr.map(t=>`<li>${t}</li>`).join(''); };
   list('r-positive-traits', prof.publicTraits);
-  list('r-negative-traits', prof.publicTraits.slice(-3).concat(prof.privateTraits.slice(-3)));
+  list('r-negative-traits', prof.challenges.slice(0, 5));
   list('r-pressure-traits', prof.pressureTraits);
   list('r-strengths',       prof.strengths);
   list('r-challenges',      prof.challenges);
@@ -1868,6 +1868,74 @@ function calculateAndShowResults(isForced) {
       <div class="job-cat-title">${c.cat}</div>
       <ul class="job-list-items">${c.items.map(j=>`<li>${j}</li>`).join('')}</ul>
     </div>`).join('');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderChart(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+  }
+
+  // Keep textual result sections working even if Chart.js fails to load.
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js is not available. Skipping chart render for:', canvasId);
+    return;
+  }
+
+  const colors = ['#c0392b','#e67e22','#27ae60','#2980b9'];
+  chartInstances[canvasId] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['D','I','S','C'],
+      datasets: [{
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        pointBackgroundColor: colors,
+        pointBorderColor: colors,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+        tension: 0.2,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` Skor: ${Number(ctx.parsed.y).toFixed(1)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: -8, max: 8,
+          ticks: {
+            stepSize: 2,
+            font: { size: 10 },
+            color: '#666'
+          },
+          grid: { color: '#e8e8e8' }
+        },
+        x: {
+          ticks: {
+            font: { size: 12, weight: '700' },
+            color: (ctx) => ['#c0392b','#e67e22','#27ae60','#2980b9'][ctx.index]
+          },
+          grid: { color: '#e8e8e8' }
+        }
+      }
+    }
+  });
 }
 
 // ============================================================
